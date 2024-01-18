@@ -1,0 +1,3794 @@
+#+TITLE: STAT 100 Final Exam 202330
+#+PROPERTY: header-args :cache yes
+#+LATEX_HEADER: \usepackage{pgfmath}
+Get rid of PGF math when no longer needed
+* Question 1
+** Maxima :noexport:
+#+NAME: q1-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  /* Careful: calculation of median depends on n+1 being divisible by 4 */
+  /* same for quartiles */
+  /* TODO: must find or develop quartile function that corresponds to   */
+  /* the textbook.  See https://en.wikipedia.org/wiki/Quantile          */
+  /* Textbook uses R-6 but descriptive package uses something else.     */
+  if constantp(parameters)
+  then block(
+    data: parameters[1]
+    )
+  else block(
+    /* TODO: randomly generate the parameters (based on a seed) */
+    /* TODO: randomly generate the data (based on a seed) */
+    data: [20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10]
+    );
+  fpprintprec: 4$
+  load("descriptive")$
+  linel: 2000$ /* line wrap at 2000 characters ... should be never */
+  sorted:     sort(data);
+  sorted2:    create_list(x^2, x, sorted);
+  n:          length(data);  
+  sum1:       lsum(x, x, data);
+  mean:       float(sum1/n); 
+  pos2:       0.5*(n+1);      
+  median:     median(data);       
+  pos1:       0.25*(n+1); 
+  Q1:         sorted[1*(n+1)/4]; 
+  pos3:       0.75*(n+1);        
+  Q3:         sorted[3*(n+1)/4]; 
+  IQR:        Q3 - Q1;          
+  sum2:       lsum(x^2, x, data);   
+  var1v:      float(var1(data));    
+  std1v:      float(std1(data));    
+  xmin:       lmin(data);           
+  xmax:       lmax(data);           
+  zmin:       float((lmin(data)-mean)/std1v);
+  zmax:       float((lmax(data)-mean)/std1v);
+  lfence:     float(Q1 - 1.5*IQR);        
+  ufence:     float(Q3 + 1.5*IQR);
+  meancalc:   simplode(["\\[ \\bar{x} = \\frac{\\sum x}{n} = \\frac{", sum1, "}{", n, "} = ", mean, " \\]"]);
+  pos2calc:   simplode(["\\[ 0.5(n+1) = 0.5(", n, "+1) = 0.5(", n+1, ") = ", pos2, " \\]"]);
+  mediancalc: simplode(["\\[ m = x_{", pos2, "} = ", median, " \\]"]);
+  pos1calc:   simplode(["\\[ 0.25(n+1) = 0.25(", n, "+1) = 0.25(", n+1, ") = ", pos1, " \\]"]);
+  Q1calc:     simplode(["\\[ Q_1 = x_{", pos1, "} = ", Q1, " \\]"]);
+  pos3calc:   simplode(["\\[ 0.75(n+1) = 0.75(", n, "+1) = 0.75(", n+1, ") = ", pos3, " \\]"]);
+  Q3calc:     simplode(["\\[ Q_3 = x_{", pos3, "} = ", Q3, " \\]"]);
+  IQRcalc:    simplode(["\\[ \\operatorname{IQR} = Q_3 - Q_1 = ", Q3, " - ", Q1, " = ", IQR, " \\]"]);
+  var1calc:   simplode([" \\[s^2 = \\frac{\\sum x^2 - \\left(\\sum x\\right)^2/n}{n-1} = \\frac{", sum2, " - ", sum1^2, "/", n, "}{", n, " -1} = ", var1v, " \\]"]);
+  std1calc:   simplode([" \\[ s = \\sqrt{s^2} = \\sqrt{", var1v, "} = ", std1v, " \\]"]);
+  zmincalc:   simplode([ "\\[z_{\\min} = \\frac{x_{\\min}-\\bar{x}}{s} = \\frac{", xmin, " - ", mean, "}{", std1v, "} = ", zmin, " \\]"]);
+  zmaxcalc:   simplode([ "\\[z_{\\max} = \\frac{x_{\\max}-\\bar{x}}{s} = \\frac{", xmax, " - ", mean, "}{", std1v, "} = ", zmax, " \\]"]);
+  lfencecalc: simplode([ "\\[ \\mbox{lower fence} = Q_1-1.5\\operatorname{IQR} = ", Q1, " - 1.5\\times ", IQR, " = ", lfence, " \\]"]);
+  ufencecalc: simplode([ "\\[ \\mbox{upper fence} = Q_3+1.5\\operatorname{IQR} = ", Q3, " + 1.5\\times ", IQR, " = ", ufence, " \\]"]);
+  zminOutlierDecision: if zmin < -3
+  then "\\(z_{\\min} is less than -3 so it is an outlier"
+  else "\\(z_{\\min}\\) is not less than -3 so it is not an outlier";
+  zmaxOutlierDecision: if zmax > 3
+  then "\\(z_{\\max} is greater than 3 so it is an outlier"
+  else "\\(z_{\\max}\\) is not greater than 3 so it is not an outlier";
+  lfenceOutlierDecision: if xmin < lfence
+  then "\\(x_{\\min}\\) is less than the lower fence so it is an outlier"
+  else "\\(x_{\\min}\\) is not less than the lower fence so it is not an outlier";
+  ufenceOutlierDecision: if xmax > ufence
+  then "\\(x_{\\max}\\) is greater than the upper fence so it is an outlier"
+  else "\\(x_{\\max}\\) is not greater than the upper fence so it is not an outlier";
+#+END_SRC
+
+#+RESULTS[9301c3198d95fc9c5f7419d40c9a546756c783d3]: q1-maxima
+
+#+NAME: q1-ufenceOutlierDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(ufenceOutlierDecision);
+#+END_SRC
+
+#+RESULTS[ca7cd1ad6aacf189e82582df80aed868f0b77041]: q1-ufenceOutlierDecision
+:results:
+\(x_{\max}\) is not greater than the upper fence so it is not an outlier 
+:end:
+
+#+NAME: q1-lfenceOutlierDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(lfenceOutlierDecision);
+#+END_SRC
+
+#+RESULTS[4aca09304de5f6daf31970dd76e8a3f1290bbb45]: q1-lfenceOutlierDecision
+:results:
+\(x_{\min}\) is not less than the lower fence so it is not an outlier 
+:end:
+
+#+NAME: q1-ufencecalc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(ufencecalc);
+#+END_SRC
+
+#+RESULTS[c9031901f0816f38da80ef7d4f9b353129599c32]: q1-ufencecalc
+:results:
+\[ \mbox{upper fence} = Q_3+1.5\operatorname{IQR} = 18 + 1.5\times 6 = 27.0 \] 
+:end:
+
+#+NAME: q1-lfencecalc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(lfencecalc);
+#+END_SRC
+
+#+RESULTS[06d628ae94e0882099a7ce2c731c31818c1e1111]: q1-lfencecalc
+:results:
+\[ \mbox{lower fence} = Q_1-1.5\operatorname{IQR} = 12 - 1.5\times 6 = 3.0 \] 
+:end:
+
+#+NAME: q1-zmaxOutlierDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(zmaxOutlierDecision);
+#+END_SRC
+
+#+RESULTS[59e42a2f2898baeaf1f9581c3c1333881aa0163b]: q1-zmaxOutlierDecision
+:results:
+\(z_{\max}\) is not greater than 3 so it is not an outlier 
+:end:
+
+#+NAME: q1-zminOutlierDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(zminOutlierDecision);
+#+END_SRC
+
+#+RESULTS[d28c53572d6b5b92c44111d2f3ce70a5a399aa1d]: q1-zminOutlierDecision
+:results:
+\(z_{\min}\) is not less than -3 so it is not an outlier 
+:end:
+
+#+NAME: q1-zmaxcalc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(zmaxcalc);
+#+END_SRC
+
+#+RESULTS[67c2399b2ba25124c4865ed4453eeaa5fae2eb7e]: q1-zmaxcalc
+:results:
+\[z_{\max} = \frac{x_{\max}-\bar{x}}{s} = \frac{20 - 15.0}{3.317} = 1.508 \] 
+:end:
+
+#+NAME: q1-zmincalc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(zmincalc);
+#+END_SRC
+
+#+RESULTS[c453e64ad71786b5cbdf1c80cada65b25c27a6c4]: q1-zmincalc
+:results:
+\[z_{\min} = \frac{x_{\min}-\bar{x}}{s} = \frac{10 - 15.0}{3.317} = -1.508 \] 
+:end:
+
+#+NAME: q1-std1calc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(std1calc);
+#+END_SRC
+
+#+RESULTS[912f846f8ea3a9a368624d2ea2fd02c82e6b6cc7]: q1-std1calc
+:results:
+ \[ s = \sqrt{s^2} = \sqrt{11.0} = 3.317 \] 
+:end:
+
+#+NAME: q1-var1calc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(var1calc);
+#+END_SRC
+
+#+RESULTS[9af02473b02746378f1b0c2f3e442c7ef3fdad55]: q1-var1calc
+:results:
+ \[s^2 = \frac{\sum x^2 - \left(\sum x\right)^2/n}{n-1} = \frac{2585 - 27225/11}{11 -1} = 11.0 \] 
+:end:
+
+#+NAME: q1-IQRcalc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(IQRcalc);
+#+END_SRC
+
+#+RESULTS[d66a3544272bcd602b74fd8071ddd713791997ac]: q1-IQRcalc
+:results:
+\[ \operatorname{IQR} = Q_3 - Q_1 = 18 - 12 = 6 \] 
+:end:
+
+#+NAME: q1-Q3calc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(Q3calc);
+#+END_SRC
+
+#+RESULTS[5993d20a3a51e9f476a152483c86415a7c7ff7a8]: q1-Q3calc
+:results:
+\[ Q_3 = x_{9.0} = 18 \] 
+:end:
+
+#+NAME: q1-pos3calc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(pos3calc);
+#+END_SRC
+
+#+RESULTS[c96ef4603430262c4b94c3678effba31d4ec8fee]: q1-pos3calc
+:results:
+\[ 0.75(n+1) = 0.75(11+1) = 0.75(12) = 9.0 \] 
+:end:
+
+#+NAME: q1-Q1calc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(Q1calc);
+#+END_SRC
+
+#+RESULTS[f4e424392234a6a73592287960092751fd0a9f2a]: q1-Q1calc
+:results:
+\[ Q_1 = x_{3.0} = 12 \] 
+:end:
+
+#+NAME: q1-pos1calc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(pos1calc);
+#+END_SRC
+
+#+RESULTS[a83ab5a27ea0655ce467e04560c3a60d52382a2b]: q1-pos1calc
+:results:
+\[ 0.25(n+1) = 0.25(11+1) = 0.25(12) = 3.0 \] 
+:end:
+
+#+NAME: q1-mediancalc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(mediancalc);
+#+END_SRC
+
+#+RESULTS[b618569c1db085b6cd33f7f989dc814f74cf1976]: q1-mediancalc
+:results:
+\[ m = x_{6.0} = 15 \] 
+:end:
+
+#+NAME: q1-pos2calc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(pos2calc);
+#+END_SRC
+
+#+RESULTS[9327967a3213184a3f2226aedda0c27bc9fc0759]: q1-pos2calc
+:results:
+\[ 0.5(n+1) = 0.5(11+1) = 0.5(12) = 6.0 \] 
+:end:
+
+#+NAME: q1-meancalc
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(meancalc);
+#+END_SRC
+
+#+RESULTS[39db71421911e6948f97ef4956b38e9ee35bceb7]: q1-meancalc
+:results:
+\[ \bar{x} = \frac{\sum x}{n} = \frac{165}{11} = 15.0 \] 
+:end:
+
+#+NAME: q1-n
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(n);
+#+END_SRC
+
+#+RESULTS[d0edef9ef8a20fa8c37016a10fdabba29f562da6]: q1-n
+:results:
+11 
+:end:
+
+#+NAME: q1-sum1
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(sum1);
+#+END_SRC
+
+#+RESULTS[3de200d4e331ddb6e32eb74b0497fb31ce82dbb6]: q1-sum1
+:results:
+165 
+:end:
+
+#+NAME: q1-mean
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(mean);
+#+END_SRC
+
+#+RESULTS[f3d2e0144c7b5a1db8a30cfdd6f033fc2dba16e1]: q1-mean
+:results:
+15.0 
+:end:
+
+#+NAME: q1-pos2
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(pos2);
+#+END_SRC
+
+#+RESULTS[6fab8293f3635ba4e499c173f74151cf1525c15b]: q1-pos2
+:results:
+6.0 
+:end:
+
+#+NAME: q1-median
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(median);
+#+END_SRC
+
+#+RESULTS[0d27438776541d360e937b5b4034e9a4a6116862]: q1-median
+:results:
+15 
+:end:
+
+#+NAME: q1-pos1
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(pos1);
+#+END_SRC
+
+#+RESULTS[a4ada4bd90082fa459813dc3452217c19ab8911f]: q1-pos1
+:results:
+3.0 
+:end:
+
+#+NAME: q1-Q1
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(Q1);
+#+END_SRC
+
+#+RESULTS[5c460a3de9f408b19b37bed869c04460bf072c1d]: q1-Q1
+:results:
+12 
+:end:
+
+#+NAME: q1-pos3
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(pos3);
+#+END_SRC
+
+#+RESULTS[8d0714fd4cc183143669c030a719b8096ed494d7]: q1-pos3
+:results:
+9.0 
+:end:
+
+#+NAME: q1-Q3
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(Q3);
+#+END_SRC
+
+#+RESULTS[c6604f01e600b668a97ed0c6ae9ee2b6044f6ec0]: q1-Q3
+:results:
+18 
+:end:
+
+#+NAME: q1-IQR
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(IQR);
+#+END_SRC
+
+#+RESULTS[b3611e8bcd320b55519a02fbb74cc5f5ab52fa13]: q1-IQR
+:results:
+6 
+:end:
+
+#+NAME: q1-sum2
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(sum2);
+#+END_SRC
+
+#+RESULTS[7d0476c978a6116b9efe8e6710282b6a6bc1499b]: q1-sum2
+:results:
+2585 
+:end:
+
+#+NAME: q1-var1v
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(var1v);
+#+END_SRC
+
+#+RESULTS[e54d4a557d2605e02b27f3025838afb0b12f4df4]: q1-var1v
+:results:
+11.0 
+:end:
+
+#+NAME: q1-std1v
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(std1v);
+#+END_SRC
+
+#+RESULTS[8ae837abe80cb5e626a736beee1d27207515972a]: q1-std1v
+:results:
+3.317 
+:end:
+
+#+NAME: q1-xmin
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(xmin);
+#+END_SRC
+
+#+RESULTS[a60b45735d9df12350aee9fbced93c878dd542b5]: q1-xmin
+:results:
+10 
+:end:
+
+#+NAME: q1-xmax
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(xmax);
+#+END_SRC
+
+#+RESULTS[893642cc5038afe69b92a518965196da6d98a506]: q1-xmax
+:results:
+20 
+:end:
+
+#+NAME: q1-zmin
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(zmin);
+#+END_SRC
+
+#+RESULTS[b3d0472612833e6900e44d14a72be76a415b78b0]: q1-zmin
+:results:
+- 1.508 
+:end:
+
+#+NAME: q1-zmax
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(zmax);
+#+END_SRC
+
+#+RESULTS[99e40a65514c6550226af899abc6e9ee8c510163]: q1-zmax
+:results:
+1.508 
+:end:
+
+#+NAME: q1-lfence
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(lfence);
+#+END_SRC
+
+#+RESULTS[2fa047dca7cd225da3df8d55c471bed409dadab9]: q1-lfence
+:results:
+3.0 
+:end:
+
+#+NAME: q1-ufence
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  print(ufence);
+#+END_SRC
+
+#+RESULTS[6738c2ba633d58a0a820e75474f4843e4151ef37]: q1-ufence
+:results:
+27.0 
+:end:
+
+#+NAME: q1-data
+#+HEADER: :exports output :results table :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  printf(true, "~{~a~^, ~}~%", data);
+#+END_SRC
+
+#+RESULTS[6a6a8c682d1a3fb32d112d5679d80b7c4e4e4c9b]: q1-data
+| 20 | 19 | 18 | 17 | 16 | 15 | 14 | 13 | 12 | 11 | 10 |
+
+#+NAME: q1-sorted
+#+HEADER: :exports output :results table :noweb yes
+#+BEGIN_SRC maxima 
+  <<q1-maxima>>
+  printf(true, "~{~a~^, ~}~%", cons("\\(x\\)", sorted));
+  printf(true, "~{~a~^, ~}~%", cons("\\(x^2\\)", sorted2));
+#+END_SRC
+
+#+RESULTS[19f916a9066c482ecc9cb1ebdda1c206d10cd8b2]: q1-sorted
+| \(x\)   |  10 |  11 |  12 |  13 |  14 |  15 |  16 |  17 |  18 |  19 |  20 |
+| \(x^2\) | 100 | 121 | 144 | 169 | 196 | 225 | 256 | 289 | 324 | 361 | 400 |
+
+** Version A 
+:PROPERTIES:
+:header-args:maxima: :var parameters=q1A-data
+:END:
+*** Parameters :noexport:
+#+NAME: q1A-data
+| 13 | 12 | 15 | 17 | 12 | 10 | 4 | 14 | 11 | 17 | 11 |
+
+*** Question
+The following data represent scores on a 20-point quiz:
+#+CALL: q1-data()
+
+#+RESULTS[b48aef8cf25332d192888e274fc3e46d01572a17]:
+| 13 | 12 | 15 | 17 | 12 | 10 | 4 | 14 | 11 | 17 | 11 |
+
+1. Find the mean.
+2. Find the median.
+3. Find the interquartile range.
+4. Find the standard deviation.
+5. Are there any outliers in the data?  Justify your conclusion.
+*** Hint
+1. \(\bar{x} = \sum x/n\)
+2. Sort the data.  The position of the median is \(0.5(n+1)\).
+3. Position of \(Q_1\) is \(0.25(n+1)\); position of \(Q_3\) is \(0.75(n+1)\).
+   The IQR is \(Q_3-Q_1\).
+4. Make a table to find \(\sum x\) and \(\sum x^2\).  The variance is
+   \[ s^2 = \frac{\sum x^2 - \left(\sum x\right)/n}{n-1}. \]
+   The standard deviation is \(s = \sqrt{s^2}\).
+5. Calculate the \(z\)-scores \(z = (x-\bar{x})/n\) of the smallest and
+   largest measurements.  Alternatively find the lower fence
+   \(Q_1-1.5\operatorname{IQR}\) and compare with the minimum measurement,
+   and the upper fence \(Q_3+1.5\operatorname{IQR}\) and compare with the
+   maximum measurement.
+*** Answer
+1. The mean is call_q1-mean() {{{results(12.36 )}}}
+2. The median is call_q1-median() {{{results(12 )}}}
+3. The interquartile range is call_q1-IQR() {{{results(4 )}}}
+4. The standard deviation is call_q1-std1v() {{{results(3.641 )}}}
+5. The \(z\)-scores of the smallest and largest measurements
+   are call_q1-zmin() {{{results(- 2.297 )}}}
+   and call_q1-zmax() {{{results(1.273 )}}}
+
+   Alternatively, the lower and upper fences are
+   are call_q1-lfence() {{{results(5.0 )}}}
+   and call_q1-ufence() {{{results(21.0 )}}}
+*** Solution
+Sort the data then square the data and make a table as follows:
+#+CALL: q1-sorted()
+
+#+RESULTS[630f3355d34ae96fc18d0f187bf7b5a90b2628e3]:
+| \(x\)   |  4 |  10 |  11 |  11 |  12 |  12 |  13 |  14 |  15 |  17 |  17 |
+| \(x^2\) | 16 | 100 | 121 | 121 | 144 | 144 | 169 | 196 | 225 | 289 | 289 |
+
+1. The mean is
+   call_q1-meancalc() {{{results(\[ \bar{x} = \frac{\sum x}{n} = \frac{136}{11} = 12.36 \] )}}}
+2. The position of the median in the sorted list is
+   call_q1-pos2calc() {{{results(\[ 0.5(n+1) = 0.5(11+1) = 0.5(12) = 6.0 \] )}}}
+   The value of the median is
+   call_q1-mediancalc() {{{results(\[ m = x_{6.0} = 12 \] )}}} 
+3. The position of the first quartile in the sorted list is
+   call_q1-pos1calc() {{{results(\[ 0.25(n+1) = 0.25(11+1) = 0.25(12) = 3.0 \] )}}}
+   The value of the first quartile is
+   call_q1-Q1calc() {{{results(\[ Q_1 = x_{3.0} = 11 \] )}}}
+   The position of the third quartile in the sorted list is
+   call_q1-pos3calc() {{{results(\[ 0.75(n+1) = 0.75(11+1) = 0.75(12) = 9.0 \] )}}}
+   The value of the third quartile is
+   call_q1-Q3calc() {{{results(\[ Q_3 = x_{9.0} = 15 \] )}}}
+   The value of the interquartile range is
+   call_q1-IQRcalc() {{{results(\[ \operatorname{IQR} = Q_3 - Q_1 = 15 - 11 = 4 \] )}}}
+4. The variance by the computing formula is
+   call_q1-var1calc() {{{results( \[s^2 = \frac{\sum x^2 - \left(\sum x\right)^2/n}{n-1} = \frac{1814 - 18496/11}{11 -1} = 13.25 \] )}}}
+   The standard deviation is the square root of the variance:
+   call_q1-std1calc() {{{results( \[ s = \sqrt{s^2} = \sqrt{13.25} = 3.641 \] )}}}
+5. The \(z\)-scores of the smallest and largest items are
+   call_q1-zmincalc() {{{results(\[z_{\min} = \frac{x_{\min}-\bar{x}}{s} = \frac{4 - 12.36}{3.641} = -2.297 \] )}}}
+   and
+   call_q1-zmaxcalc() {{{results(\[z_{\max} = \frac{x_{\max}-\bar{x}}{s} = \frac{17 - 12.36}{3.641} = 1.273 \] )}}}
+   call_q1-zminOutlierDecision() {{{results(\(z_{\min}\) is not less than -3 so it is not an outlier )}}}.
+   call_q1-zmaxOutlierDecision() {{{results(\(z_{\max}\) is not greater than 3 so it is not an outlier )}}}.
+
+   Alternatively, calculating the lower and upper fences,
+   call_q1-lfencecalc() {{{results(\[ \mbox{lower fence} = Q_1-1.5\operatorname{IQR} = 11 - 1.5\times 4 = 5.0 \] )}}}
+   and
+   call_q1-ufencecalc() {{{results(\[ \mbox{upper fence} = Q_3+1.5\operatorname{IQR} = 15 + 1.5\times 4 = 21.0 \] )}}}
+
+   We compare \(x_{\min} = \) call_q1-xmin() {{{results(4 )}}}
+   to the lower fence and \(x_{\max} = \) call_q1-xmax() {{{results(17 )}}}
+   to the upper fence.
+   call_q1-lfenceOutlierDecision() {{{results(\(x_{\min}\) is less than the lower fence so it is an outlier )}}}.
+   call_q1-ufenceOutlierDecision() {{{results(\(x_{\max}\) is not greater than the upper fence so it is not an outlier )}}}.
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q1B-data
+:END:
+*** Parameters :noexport:
+#+NAME: q1B-data
+| 10 | 12 | 15 | 18 | 12 | 10 | 7 | 14 | 13 | 17 | 11 |
+
+*** Question
+The following data represent scores on a 20-point quiz:
+#+CALL: q1-data()
+
+#+RESULTS[a26526ffb636c218eccb3b15e3084c81fea3a643]:
+| 10 | 12 | 15 | 18 | 12 | 10 | 7 | 14 | 13 | 17 | 11 |
+
+1. Find the mean.
+2. Find the median.
+3. Find the interquartile range.
+4. Find the standard deviation.
+5. Are there any outliers in the data?  Justify your conclusion.
+*** Hint
+1. \(\bar{x} = \sum x/n\)
+2. Sort the data.  The position of the median is \(0.5(n+1)\).
+3. Position of \(Q_1\) is \(0.25(n+1)\); position of \(Q_3\) is \(0.75(n+1)\).
+   The IQR is \(Q_3-Q_1\).
+4. Make a table to find \(\sum x\) and \(\sum x^2\).  The variance is
+   \[ s^2 = \frac{\sum x^2 - \left(\sum x\right)/n}{n-1}. \]
+   The standard deviation is \(s = \sqrt{s^2}\).
+5. Calculate the \(z\)-scores \(z = (x-\bar{x})/n\) of the smallest and
+   largest measurements.  Alternatively find the lower fence
+   \(Q_1-1.5\operatorname{IQR}\) and compare with the minimum measurement,
+   and the upper fence \(Q_3+1.5\operatorname{IQR}\) and compare with the
+   maximum measurement.
+*** Answer
+1. The mean is call_q1-mean() {{{results(12.64 )}}}
+2. The median is call_q1-median() {{{results(12 )}}}
+3. The interquartile range is call_q1-IQR() {{{results(5 )}}}
+4. The standard deviation is call_q1-std1v() {{{results(3.233 )}}}
+5. The \(z\)-scores of the smallest and largest measurements
+   are call_q1-zmin() {{{results(- 1.743 )}}}
+   and call_q1-zmax() {{{results(1.659 )}}}
+
+   Alternatively, the lower and upper fences are
+   are call_q1-lfence() {{{results(2.5 )}}}
+   and call_q1-ufence() {{{results(22.5 )}}}
+*** Solution
+Sort the data then square the data and make a table as follows:
+#+CALL: q1-sorted()
+
+#+RESULTS[3c2b2454ae900c4bb4e780b10193e64d4d153a07]:
+| \(x\)   |  7 |  10 |  10 |  11 |  12 |  12 |  13 |  14 |  15 |  17 |  18 |
+| \(x^2\) | 49 | 100 | 100 | 121 | 144 | 144 | 169 | 196 | 225 | 289 | 324 |
+
+1. The mean is
+   call_q1-meancalc() {{{results(\[ \bar{x} = \frac{\sum x}{n} = \frac{139}{11} = 12.64 \] )}}}
+2. The position of the median in the sorted list is
+   call_q1-pos2calc() {{{results(\[ 0.5(n+1) = 0.5(11+1) = 0.5(12) = 6.0 \] )}}}
+   The value of the median is
+   call_q1-mediancalc() {{{results(\[ m = x_{6.0} = 12 \] )}}} 
+3. The position of the first quartile in the sorted list is
+   call_q1-pos1calc() {{{results(\[ 0.25(n+1) = 0.25(11+1) = 0.25(12) = 3.0 \] )}}}
+   The value of the first quartile is
+   call_q1-Q1calc() {{{results(\[ Q_1 = x_{3.0} = 10 \] )}}}
+   The position of the third quartile in the sorted list is
+   call_q1-pos3calc() {{{results(\[ 0.75(n+1) = 0.75(11+1) = 0.75(12) = 9.0 \] )}}}
+   The value of the third quartile is
+   call_q1-Q3calc() {{{results(\[ Q_3 = x_{9.0} = 15 \] )}}}
+   The value of the interquartile range is
+   call_q1-IQRcalc() {{{results(\[ \operatorname{IQR} = Q_3 - Q_1 = 15 - 10 = 5 \] )}}}
+4. The variance by the computing formula is
+   call_q1-var1calc() {{{results( \[s^2 = \frac{\sum x^2 - \left(\sum x\right)^2/n}{n-1} = \frac{1861 - 19321/11}{11 -1} = 10.45 \] )}}}
+   The standard deviation is the square root of the variance:
+   call_q1-std1calc() {{{results( \[ s = \sqrt{s^2} = \sqrt{10.45} = 3.233 \] )}}}
+5. The \(z\)-scores of the smallest and largest items are
+   call_q1-zmincalc() {{{results(\[z_{\min} = \frac{x_{\min}-\bar{x}}{s} = \frac{7 - 12.64}{3.233} = -1.743 \] )}}}
+   and
+   call_q1-zmaxcalc() {{{results(\[z_{\max} = \frac{x_{\max}-\bar{x}}{s} = \frac{18 - 12.64}{3.233} = 1.659 \] )}}}
+   call_q1-zminOutlierDecision() {{{results(\(z_{\min}\) is not less than -3 so it is not an outlier )}}}.
+   call_q1-zmaxOutlierDecision() {{{results(\(z_{\max}\) is not greater than 3 so it is not an outlier )}}}.
+
+   Alternatively, calculating the lower and upper fences,
+   call_q1-lfencecalc() {{{results(\[ \mbox{lower fence} = Q_1-1.5\operatorname{IQR} = 10 - 1.5\times 5 = 2.5 \] )}}}
+   and
+   call_q1-ufencecalc() {{{results(\[ \mbox{upper fence} = Q_3+1.5\operatorname{IQR} = 15 + 1.5\times 5 = 22.5 \] )}}}
+
+   We compare \(x_{\min} = \) call_q1-xmin() {{{results(7 )}}}
+   to the lower fence and \(x_{\max} = \) call_q1-xmax() {{{results(18 )}}}
+   to the upper fence.
+   call_q1-lfenceOutlierDecision() {{{results(\(x_{\min}\) is not less than the lower fence so it is not an outlier )}}}.
+   call_q1-ufenceOutlierDecision() {{{results(\(x_{\max}\) is not greater than the upper fence so it is not an outlier )}}}.
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q1C-data
+:END:
+*** Parameters :noexport:
+#+NAME: q1C-data
+| 11 | 13 | 15 | 15 | 12 | 10 | 8 | 14 | 13 | 19 | 12 |
+*** Question
+The following data represent scores on a 20-point quiz:
+#+CALL: q1-data()
+
+#+RESULTS[f4a9574b6d76040d83b9c65b591939e2fd71d477]:
+| 11 | 13 | 15 | 15 | 12 | 10 | 8 | 14 | 13 | 19 | 12 |
+
+1. Find the mean.
+2. Find the median.
+3. Find the interquartile range.
+4. Find the standard deviation.
+5. Are there any outliers in the data?  Justify your conclusion.
+*** Hint
+1. \(\bar{x} = \sum x/n\)
+2. Sort the data.  The position of the median is \(0.5(n+1)\).
+3. Position of \(Q_1\) is \(0.25(n+1)\); position of \(Q_3\) is \(0.75(n+1)\).
+   The IQR is \(Q_3-Q_1\).
+4. Make a table to find \(\sum x\) and \(\sum x^2\).  The variance is
+   \[ s^2 = \frac{\sum x^2 - \left(\sum x\right)/n}{n-1}. \]
+   The standard deviation is \(s = \sqrt{s^2}\).
+5. Calculate the \(z\)-scores \(z = (x-\bar{x})/n\) of the smallest and
+   largest measurements.  Alternatively find the lower fence
+   \(Q_1-1.5\operatorname{IQR}\) and compare with the minimum measurement,
+   and the upper fence \(Q_3+1.5\operatorname{IQR}\) and compare with the
+   maximum measurement.
+*** Answer
+1. The mean is call_q1-mean() {{{results(12.91 )}}}
+2. The median is call_q1-median() {{{results(13 )}}}
+3. The interquartile range is call_q1-IQR() {{{results(4 )}}}
+4. The standard deviation is call_q1-std1v() {{{results(2.914 )}}}
+5. The \(z\)-scores of the smallest and largest measurements
+   are call_q1-zmin() {{{results(- 1.685 )}}}
+   and call_q1-zmax() {{{results(2.09 )}}}
+
+   Alternatively, the lower and upper fences are
+   are call_q1-lfence() {{{results(5.0 )}}}
+   and call_q1-ufence() {{{results(21.0 )}}}
+*** Solution
+Sort the data then square the data and make a table as follows:
+#+CALL: q1-sorted()
+
+#+RESULTS[5e81920c3d06e6ac69107fda8518d1a9a877cd44]:
+| \(x\)   |  8 |  10 |  11 |  12 |  12 |  13 |  13 |  14 |  15 |  15 |  19 |
+| \(x^2\) | 64 | 100 | 121 | 144 | 144 | 169 | 169 | 196 | 225 | 225 | 361 |
+
+1. The mean is
+   call_q1-meancalc() {{{results(\[ \bar{x} = \frac{\sum x}{n} = \frac{142}{11} = 12.91 \] )}}}
+2. The position of the median in the sorted list is
+   call_q1-pos2calc() {{{results(\[ 0.5(n+1) = 0.5(11+1) = 0.5(12) = 6.0 \] )}}}
+   The value of the median is
+   call_q1-mediancalc() {{{results(\[ m = x_{6.0} = 13 \] )}}} 
+3. The position of the first quartile in the sorted list is
+   call_q1-pos1calc() {{{results(\[ 0.25(n+1) = 0.25(11+1) = 0.25(12) = 3.0 \] )}}}
+   The value of the first quartile is
+   call_q1-Q1calc() {{{results(\[ Q_1 = x_{3.0} = 11 \] )}}}
+   The position of the third quartile in the sorted list is
+   call_q1-pos3calc() {{{results(\[ 0.75(n+1) = 0.75(11+1) = 0.75(12) = 9.0 \] )}}}
+   The value of the third quartile is
+   call_q1-Q3calc() {{{results(\[ Q_3 = x_{9.0} = 15 \] )}}}
+   The value of the interquartile range is
+   call_q1-IQRcalc() {{{results(\[ \operatorname{IQR} = Q_3 - Q_1 = 15 - 11 = 4 \] )}}}
+4. The variance by the computing formula is
+   call_q1-var1calc() {{{results( \[s^2 = \frac{\sum x^2 - \left(\sum x\right)^2/n}{n-1} = \frac{1918 - 20164/11}{11 -1} = 8.491 \] )}}}
+   The standard deviation is the square root of the variance:
+   call_q1-std1calc() {{{results( \[ s = \sqrt{s^2} = \sqrt{8.491} = 2.914 \] )}}}
+5. The \(z\)-scores of the smallest and largest items are
+   call_q1-zmincalc() {{{results(\[z_{\min} = \frac{x_{\min}-\bar{x}}{s} = \frac{8 - 12.91}{2.914} = -1.685 \] )}}}
+   and
+   call_q1-zmaxcalc() {{{results(\[z_{\max} = \frac{x_{\max}-\bar{x}}{s} = \frac{19 - 12.91}{2.914} = 2.09 \] )}}}
+   call_q1-zminOutlierDecision() {{{results(\(z_{\min}\) is not less than -3 so it is not an outlier )}}}.
+   call_q1-zmaxOutlierDecision() {{{results(\(z_{\max}\) is not greater than 3 so it is not an outlier )}}}.
+
+   Alternatively, calculating the lower and upper fences,
+   call_q1-lfencecalc() {{{results(\[ \mbox{lower fence} = Q_1-1.5\operatorname{IQR} = 11 - 1.5\times 4 = 5.0 \] )}}}
+   and
+   call_q1-ufencecalc() {{{results(\[ \mbox{upper fence} = Q_3+1.5\operatorname{IQR} = 15 + 1.5\times 4 = 21.0 \] )}}}
+
+   We compare \(x_{\min} = \) call_q1-xmin() {{{results(8 )}}}
+   to the lower fence and \(x_{\max} = \) call_q1-xmax() {{{results(19 )}}}
+   to the upper fence.
+   call_q1-lfenceOutlierDecision() {{{results(\(x_{\min}\) is not less than the lower fence so it is not an outlier )}}}.
+   call_q1-ufenceOutlierDecision() {{{results(\(x_{\max}\) is not greater than the upper fence so it is not an outlier )}}}.
+
+* Question 2
+** Maxima                                                          :noexport:
+#+NAME: q2-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  /* Careful: calculation of median depends on n+1 being divisible by 4 */
+  /* same for quartiles */
+  /* TODO: must find or develop quartile function that corresponds to   */
+  /* the textbook.  See https://en.wikipedia.org/wiki/Quantile          */
+  /* Textbook uses R-6 but descriptive package uses something else.     */
+  if constantp(parameters)
+  then block(
+    YI: parameters[1][1]
+    ,YA: parameters[1][2]
+    ,YN: parameters[1][3]
+    ,OI: parameters[2][1]
+    ,OA: parameters[2][2]
+    ,ON: parameters[2][3]
+    )
+  else block(
+    /* TODO: randomly generate the parameters (based on a seed) */
+    /* TODO: randomly generate the data (based on a seed) */
+    YI:    11
+    ,YA:   12 
+    ,YN:   13 
+    ,OI:   21 
+    ,OA:   22 
+    ,ON:   23 
+    );
+  fpprintprec: 4$
+  sumY:    YI + YA + YN; 
+  sumO:    OI + OA + ON;  
+  sumI:    YI + OI;        
+  sumA:    YA + OA;        
+  sumN:    YN + ON;        
+  sumT:    sumY + sumO;    
+  PYI:     float(YI/sumT); 
+  PYorI:   float((sumY+sumI-YI)/sumT);
+  PYgI:    float(YI/sumI); /* careful of division by 0 */
+  PYalone: float(sumY/sumT);
+  POI:     float(OI/sumT); 
+  POorI:   float((sumO+sumI-OI)/sumT);
+  POgI:    float(OI/sumI); /* careful of division by 0 */
+  POalone: float(sumO/sumT);
+  POA:     float(OA/sumT); 
+  POorA:   float((sumO+sumA-OA)/sumT);
+  POgA:    float(OA/sumA); /* careful of division by 0 */
+  POalone: float(sumO/sumT);
+  /* for independence tests, multiplicative test P(AB) = P(A)P(B)
+  less likely to involve division? */
+  YIExclusiveDecision: if PYI = 0
+  then "\\(P(Y\\cap I) = 0 \\) so events Y and I are mutually exclusive"
+  else "\\( P(Y\\cap I) \\ne 0 \\) so events Y and I are not mutually exclusive";
+  YIIndependentDecision: if PYgI = PYalone
+  then "\\(P(Y|I) = P(Y) \\) so events Y and I are independent"
+  else "\\( P(Y|I) \\ne P(Y) \\) so events Y and I are dependent";
+  OIExclusiveDecision: if POI = 0
+  then "\\( P(O\\cap I) = 0 \\) so events O and I are mutually exclusive"
+  else "\\( P(O\\cap I) \\ne 0 \\) so events O and I are not mutually exclusive";
+  OIIndependentDecision: if POgI = POalone
+  then "\\(P(O|I) = P(O) \\) so events O and I are independent"
+  else "\\( P(O|I) \\ne P(O) \\) so events O and I are dependent";
+  OAExclusiveDecision: if POA = 0
+  then "\\( P(O\\cap A) = 0 \\) so events O and A are mutually exclusive"
+  else "\\( P(O\\cap A) \\ne 0 \\) so events O and A are not mutually exclusive";
+  OAIndependentDecision: if POgA = POalone
+  then "\\(P(O|A) = P(O) \\) so events O and A are independent"
+  else "\\( P(O|A) \\ne P(O) \\) so events O and A are dependent";
+
+#+END_SRC
+
+#+RESULTS[377de7401615f740a0bba3c22fb12189bace0671]: q2-maxima
+
+#+NAME: q2-OAIndependentDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(OAIndependentDecision);
+#+END_SRC
+
+#+RESULTS[04279dc917c0e772f6f7e7a4844f398b5d133d4f]: q2-OAIndependentDecision
+:results:
+\(P(O|A) = P(O) \) so events O and A are independent 
+:end:
+
+#+NAME: q2-OIIndependentDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(OIIndependentDecision);
+#+END_SRC
+
+#+RESULTS[3241a8f668b6465db7f7a0f5b788b29f14e7d17c]: q2-OIIndependentDecision
+:results:
+\( P(O|I) \ne P(O) \) so events O and I are dependent 
+:end:
+
+#+NAME: q2-YIIndependentDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(YIIndependentDecision);
+#+END_SRC
+
+#+RESULTS[7ce776d67c14d48b6122d468a169355f349da7f8]: q2-YIIndependentDecision
+:results:
+\( P(Y|I) \ne P(Y) \) so events Y and I are dependent 
+:end:
+
+#+NAME: q2-OAExclusiveDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(OAExclusiveDecision);
+#+END_SRC
+
+#+RESULTS[b8e310ca29f3bb47662491111ff10b1d51f476c1]: q2-OAExclusiveDecision
+:results:
+\( P(O\cap A) \ne 0 \) so events O and A are not mutually exclusive 
+:end:
+
+#+NAME: q2-OIExclusiveDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(OIExclusiveDecision);
+#+END_SRC
+
+#+RESULTS[d793c2e91c9ba3b9d8135f7f579f6a3728c009c6]: q2-OIExclusiveDecision
+:results:
+\( P(O\cap I) \ne 0 \) so events O and I are not mutually exclusive 
+:end:
+
+#+NAME: q2-YIExclusiveDecision
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(YIExclusiveDecision);
+#+END_SRC
+
+#+RESULTS[f9af65699721aef36ff5fe7970c367699b979d34]: q2-YIExclusiveDecision
+:results:
+\( P(Y\cap I) \ne 0 \) so events Y and I are not mutually exclusive 
+:end:
+
+#+NAME: q2-YI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(YI);
+#+END_SRC
+
+#+RESULTS[f9c6e840fad17df287d724134442c48e7cccd111]: q2-YI
+:results:
+11 
+:end:
+
+#+NAME: q2-YA
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(YA);
+#+END_SRC
+
+#+RESULTS[631a273babc012dc761566920b162683bdd5a87e]: q2-YA
+:results:
+12 
+:end:
+
+#+NAME: q2-YN
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(YN);
+#+END_SRC
+
+#+RESULTS[eeda56d73b52289a2c89f59dbb96332b569ea6e6]: q2-YN
+:results:
+13 
+:end:
+
+#+NAME: q2-OI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(OI);
+#+END_SRC
+
+#+RESULTS[98cff574919de5d124ef55fa27f4135665778e34]: q2-OI
+:results:
+21 
+:end:
+
+#+NAME: q2-OA
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(OA);
+#+END_SRC
+
+#+RESULTS[dc8c0bf4a17acc8345ce4bf8c48c54f7eb7ca8c8]: q2-OA
+:results:
+22 
+:end:
+
+#+NAME: q2-ON
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(ON);
+#+END_SRC
+
+#+RESULTS[e929b13b79b9346ab37dbb38da2399b6df16b341]: q2-ON
+:results:
+23 
+:end:
+
+#+NAME: q2-sumY
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(sumY);
+#+END_SRC
+
+#+RESULTS[debd9accec63eb450e5c19af6399664ed26d9fbd]: q2-sumY
+:results:
+36 
+:end:
+
+#+NAME: q2-sumO
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(sumO);
+#+END_SRC
+
+#+RESULTS[32b837928b248cd32e597646c98e567b6ca60390]: q2-sumO
+:results:
+66 
+:end:
+
+#+NAME: q2-sumI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(sumI);
+#+END_SRC
+
+#+RESULTS[ec47b2ace71e28edfb4c590a5d6c5b5491718621]: q2-sumI
+:results:
+32 
+:end:
+
+#+NAME: q2-sumA
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(sumA);
+#+END_SRC
+
+#+RESULTS[bb5d8163450b5b626d6b9afaab3090b76ebe9a90]: q2-sumA
+:results:
+34 
+:end:
+
+#+NAME: q2-sumN
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(sumN);
+#+END_SRC
+
+#+RESULTS[483713d7af791ebcc11bae298098e96477ff5375]: q2-sumN
+:results:
+36 
+:end:
+
+#+NAME: q2-sumT
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(sumT);
+#+END_SRC
+
+#+RESULTS[e1fd20fddfebe74d0054c19166cba0850c6c2736]: q2-sumT
+:results:
+102 
+:end:
+
+#+NAME: q2-POA
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(POA);
+#+END_SRC
+
+#+RESULTS[1aa740566dbc3a23bff68cc576e61a620523f92f]: q2-POA
+:results:
+0.2157 
+:end:
+
+#+NAME: q2-POI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(POI);
+#+END_SRC
+
+#+RESULTS[1180e4d2ead976253fc351d5905440f4f43be255]: q2-POI
+:results:
+0.2059 
+:end:
+
+#+NAME: q2-PYI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(PYI);
+#+END_SRC
+
+#+RESULTS[566d44f48cdffb28b291adc1f9728229923ec204]: q2-PYI
+:results:
+0.1078 
+:end:
+
+#+NAME: q2-POorA
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(POorA);
+#+END_SRC
+
+#+RESULTS[ccbbbd188e952afdb0370f43babe5c6dd90b4d1e]: q2-POorA
+:results:
+0.7647 
+:end:
+
+#+NAME: q2-POorI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(POorI);
+#+END_SRC
+
+#+RESULTS[d4768c268b1acfeec387ce7bc92aa29c49236e11]: q2-POorI
+:results:
+0.7549 
+:end:
+
+#+NAME: q2-PYorI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(PYorI);
+#+END_SRC
+
+#+RESULTS[cd07ab735ecacc8631912aaf4f171847db3eee32]: q2-PYorI
+:results:
+0.5588 
+:end:
+
+#+NAME: q2-POgA
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(POgA);
+#+END_SRC
+
+#+RESULTS[8b56b04571c7677ee37d393a2f372e5aa5437afe]: q2-POgA
+:results:
+0.6471 
+:end:
+
+#+NAME: q2-POgI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(POgI);
+#+END_SRC
+
+#+RESULTS[b756b9d66c90265a0b74d333950483eda875a356]: q2-POgI
+:results:
+0.6562 
+:end:
+
+#+NAME: q2-PYgI
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(PYgI);
+#+END_SRC
+
+#+RESULTS[7bd04fba18f75ce24bf2e3b2ec11aab8132a8bef]: q2-PYgI
+:results:
+0.3437 
+:end:
+
+#+NAME: q2-POalone
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(POalone);
+#+END_SRC
+
+#+RESULTS[168491473b25b8c152ba79a74d57e7fe92b6fee8]: q2-POalone
+:results:
+0.6471 
+:end:
+
+#+NAME: q2-PYalone
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q2-maxima>>
+  print(PYalone);
+#+END_SRC
+
+#+RESULTS[c6edeecb5c74e8ce13ea15f2e86d492133e56714]: q2-PYalone
+:results:
+0.3529 
+:end:
+
+#+NAME: q2-question-table
+#+HEADER: :exports output :results table :noweb yes
+#+BEGIN_SRC maxima
+  <<q2-maxima>>
+  printf(true, "~{~a~^, ~}~%",
+    ["Age",                  "In Favour (I)", "Against (A)", "No Opinion (N)", Total]);
+  printf(true, "~{~a~^, ~}~%",
+    ["18--30 Years Old (Y)",  YI,              YA,            YN,               ""]);
+  printf(true, "~{~a~^, ~}~%",
+    ["Over 30 Years Old (O)", OI,              OA,            ON,               ""]);
+  printf(true, "~{~a~^, ~}~%",
+    ["Total",                 "",              "",            "",               ""]);
+#+END_SRC
+
+#+RESULTS[9b88e0d9b7508ddb6e5305d3c99088b9f43d9d6c]: q2-question-table
+| Age                   | In Favour (I) | Against (A) | No Opinion (N) | Total |
+| 18--30 Years Old (Y)  |            11 |          12 |             13 |       |
+| Over 30 Years Old (O) |            21 |          22 |             23 |       |
+| Total                 |               |             |                |       |
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q2A-data
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q2A-data
+| 35 | 35 | 20 |
+| 30 | 50 | 30 |
+*** TODO Maxima                                                    :noexport:
+# Delete this garbage when rest of q2A complete
+#+NAME: q2A
+#+HEADER: :exports both
+#+HEADER: :results value
+#+begin_src maxima 
+  fpprintprec: 4$
+  YI:    q2A01: 35;                 /* YI    */
+  YA:    q2A02: 35;                 /* YA    */
+  YN:    q2A03: 20;                 /* YN    */
+  OI:    q2A04: 30;                 /* OI    */
+  OA:    q2A05: 50;                 /* OA    */
+  ON:    q2A06: 30;                 /* ON    */
+  sumY:  q2A07: q2A01+q2A02+q2A03;  /* sumY  */
+  sumO:  q2A08: q2A04+q2A05+q2A06;  /* sumO  */
+  sumI:  q2A09: q2A01+q2A04;        /* sumI  */
+  sumA:  q2A10: q2A02+q2A05;        /* sumA  */
+  sumN:  q2A11: q2A03+q2A06;        /* sumN  */
+  sumT:    q2A12: q2A07+q2A08;        /* sumT  */
+  PYI:     q2A13: float(q2A01/q2A12); /* PYI   */
+  PYorI:   q2A14: float((sumY+sumI-YI)/sumT);
+  PYgI:    q2A15: float(YI/sumI);
+  PYalone: q2A16: float(sumY/sumT);
+
+  printf(true, "~{~a~^ ~}~%", ["empty"]); 
+  printf(true, "q2A01 YI     ~a~%", q2A01);
+  printf(true, "q2A02 YA     ~a~%", q2A02);
+  printf(true, "q2A03 YN     ~a~%", q2A03);
+  printf(true, "q2A04 OI     ~a~%", q2A04);
+  printf(true, "q2A05 OA     ~a~%", q2A05);
+  printf(true, "q2A06 ON     ~a~%", q2A06);
+  printf(true, "q2A07 sumY   ~a~%", q2A07);
+  printf(true, "q2A08 sumO   ~a~%", q2A08);
+  printf(true, "q2A09 sumI   ~a~%", q2A09);
+  printf(true, "q2A10 sumA   ~a~%", q2A10);
+  printf(true, "q2A11 sumN   ~a~%", q2A11);
+  printf(true, "q2A12 sumT   ~a~%", q2A12);
+  printf(true, "q2A13 PYI    ~a~%", q2A13);
+  printf(true, "q2A14 PYorI  ~a~%", q2A14);
+  printf(true, "q2A15 PYgI    ~a~%", q2A15);
+  printf(true, "q2A16 PYalone ~a~%", q2A16);
+#+end_src
+
+#+RESULTS[f0b73395c08ee1d449aec7e1053d7e5c88b3618c]: q2A
+| empty |         |        |
+| q2A01 | YI      |     35 |
+| q2A02 | YA      |     35 |
+| q2A03 | YN      |     20 |
+| q2A04 | OI      |     30 |
+| q2A05 | OA      |     50 |
+| q2A06 | ON      |     30 |
+| q2A07 | sumY    |     90 |
+| q2A08 | sumO    |    110 |
+| q2A09 | sumI    |     65 |
+| q2A10 | sumA    |     85 |
+| q2A11 | sumN    |     50 |
+| q2A12 | sumT    |    200 |
+| q2A13 | PYI     |  0.175 |
+| q2A14 | PYorI   |    0.6 |
+| q2A15 | PYgI    | 0.5385 |
+| q2A16 | PYalone |   0.45 |
+
+*** Question
+A city councillor was
+interested in determining whether people between the ages of 18 and
+30 would hold different opinions on a proposed bylaw than people
+over 30.  The councillor polled a sample
+of call_q2-sumT() {{{results(200 )}}}
+people from his
+district.  The resulting data are shown in the table below.
+#+CALL: q2-question-table()
+
+#+RESULTS[a5aaa6e54079d775a2b0d8cc3582b12a882afc60]:
+| Age                   | In Favour (I) | Against (A) | No Opinion (N) | Total |
+| 18--30 Years Old (Y)  |            35 |          35 |             20 |       |
+| Over 30 Years Old (O) |            30 |          50 |             30 |       |
+| Total                 |               |             |                |       |
+
+Complete the table above and answer the following questions.
+1. What is the probability that a person polled would be 18--30
+   and in favour of the bylaw?
+2. What is the probability that a person polled would be 18--30
+   or in favour of the bylaw?
+3. Given that a person polled is in favour of the bylaw, what is
+   the probability that they are 18--30?
+4. Are the events ``a person polled is 18--30'' and ``a person
+   polled is in favour of the bylaw'' mutually exclusive?  Justify
+   your answer by calculating the appropriate probabilities.
+5. Are the events ``a person polled is 18--30'' and ``a person
+   polled is in favour of the bylaw'' independent?  Justify your
+   answer by calculating the appropriate probabilities.
+*** Hint
+1. This is an `and' question; the intersection of a row and column is
+   the numerator, and the total number of people polled is the denominator.
+2. This is an `or' question; the numerator is the sum of items in an L or T
+   shape, and the denominator is the total number people polled.  Or use
+   the inclusion/exclusion formula \( P(A\cup B) = P(A) + P(B) - P(A\cap B)\).
+3. This is a `given' question, a conditional probability question.  \(P(A|B)
+   = P(A\cap B)/P(B)\).
+4. Calculate the probability of \(P(A\cap B)\) and compare it to 0.
+   The events are mutually exclusive if \(P(A\cap B)=0\); otherwise the
+   events are not mutually exclusive.
+5. Calculate the probability \(P(A|B)\) and compare it to \(P(A)\).  If
+   the probabilities are the same, the events \(A\) and \(B\)
+   are independent; otherwise they are dependent.
+*** Answer
+1. \(P(Y\cap I) = \) call_q2-PYI() {{{results(0.175 )}}}
+2. \(P(Y\cup I) = \) call_q2-PYorI() {{{results(0.6 )}}}
+3. \(P(Y|I) = \) call_q2-PYgI() {{{results(0.5385 )}}}
+4. \(P(Y\cap I) = \) call_q2-PYI() {{{results(0.175 )}}}
+   call_q2-YIExclusiveDecision() {{{results(\( P(Y\cap I) \ne 0 \) so events Y and I are not mutually exclusive )}}}.
+5. \(P(Y|I) = \) call_q2-PYgI() {{{results(0.5385 )}}}
+   \(P(Y) = \) call_q2-PYalone() {{{results(0.45 )}}}
+   call_q2-YIIndependentDecision() {{{results(\( P(Y|I) \ne P(Y) \) so events Y and I are dependent )}}}.
+*** TODO Solution
+The completed table is
+#+attr_latex: :align |l|r|r|r|r|
+|-----------------------+---------------+-------------+----------------+-------|
+| Age                   | In Favour (I) | Against (A) | No Opinion (N) | Total |
+|-----------------------+---------------+-------------+----------------+-------|
+| 18--30 Years Old (Y)  |            35 |          35 |             20 |    90 |
+|-----------------------+---------------+-------------+----------------+-------|
+| Over 30 Years Old (O) |            30 |          50 |             30 |   110 |
+|-----------------------+---------------+-------------+----------------+-------|
+| Total                 |            65 |          85 |             50 |   200 |
+|-----------------------+---------------+-------------+----------------+-------|
+#+TBLFM: @2$2=remote(q2A,@2$3)::@2$3=remote(q2A,@3$3)::@2$4=remote(q2A,@4$3)
+#+TBLFM: @3$2=remote(q2A,@5$3)::@3$3=remote(q2A,@6$3)::@3$4=remote(q2A,@7$3)
+#+TBLFM: @2$5=remote(q2A,@8$3)::@3$5=remote(q2A,@9$3)::@4$2=remote(q2A,@10$3)
+#+TBLFM: @4$3=remote(q2A,@11$3)::@4$4=remote(q2A,@12$3)::@4$5=remote(q2A,@13$3)
+1. The intersection of 18--30 and In Favour is
+   src_latex[:var q2A1=q2A[1,2]]{{q2A1}} {{{results(@@latex:{35}@@)}}}.  The total polled is
+   src_latex[:var q2A12=q2A[12,2]]{{q2A12}} {{{results(@@latex:{200}@@)}}}.  The probability is
+   #+BEGIN_SRC latex :var q2A01=q2A[1,2] :var q2A12=q2A[12,2] :var q2A13=q2A[13,2]
+     \[P(Y\cap I) = \frac{{q2A01}}{{q2A12}} = {q2A13}.\]
+   #+END_SRC
+
+   #+RESULTS[2d7d5cb9dda14e1d04e687054243c2a86d000af6]:
+   #+begin_export latex
+   \[P(Y\cap I) = \frac{{35}}{{200}} = {0.175}.\]
+   #+end_export
+
+2. By inclusion/exclusion,
+   #+BEGIN_SRC latex :var sumY=q2A[7,2] :var sumI=q2A[9,2] :var YI=q2A[1,2] :var sumT=q2A[12,2] :var PYorI=q2A[14,2]
+     \[P(Y\cup I) = P(Y) + P(I) - P(Y\cap I)
+       = \frac{sumY}{sumT} + \frac{sumI}{sumT} - \frac{YI}{sumT}
+       = {PYorI}. \]
+   #+END_SRC 
+
+   #+RESULTS[dc680d91bdb16f2dbc32490f089de47ef5086062]:
+   #+begin_export latex
+   \[P(Y\cup I) = P(Y) + P(I) - P(Y\cap I)
+     = \frac{90}{200} + \frac{65}{200} - \frac{35}{200}
+     = {0.6}. \]
+   #+end_export
+
+   Alternatively, summing over the L-shaped region,
+   #+BEGIN_SRC latex :var YI=q2A[1,2] :var YA=q2A[2,2] :var YN=q2A[3,2] :var OI=q2A[4,2] :var sumT=q2A[12,2] :var PYorI=q2A[14,2]
+     \[P(Y\cup I) = \frac{YI + YA + YN + OI}{sumT} = {PYorI}. \]
+   #+END_SRC 
+
+   #+RESULTS[cab5e3d0b79c71a2f2fb2dab12b4c99106b0b33f]:
+   #+begin_export latex
+   \[P(Y\cup I) = \frac{35 + 35 + 20 + 30}{200} = {0.6}. \]
+   #+end_export
+
+3. Calculating the conditional probability,
+   #+BEGIN_SRC latex :var YI=q2A[1,2] :var sumT=q2A[12,2] :var sumI=q2A[9,2] :var PYgI=q2A[15,2]
+     \[P(Y|I) = \frac{P(Y\cap I)}{P(I)} = \frac{ YI / sumT }{ sumI/sumT }
+     = \frac{YI}{sumI} = PYgI\]
+   #+END_SRC
+
+   #+RESULTS[06d7909f93cb799973f4e8e6c673885592864ff5]:
+   #+begin_export latex
+   \[P(Y|I) = \frac{P(Y\cap I)}{P(I)} = \frac{ 35 / 200 }{ 65/200 }
+   = \frac{35}{65} = 0.5385\]
+   #+end_export
+
+4. We compare \(P(Y\cap I)\) with 0.  We have 
+   #+BEGIN_SRC latex :var q2A01=q2A[1,2] q2A12=q2A[12,2] q2A13=q2A[13,2]
+     \[P(Y\cap I) = \frac{{q2A01}}{{q2A12}} = {q2A13}\]
+   #+END_SRC
+
+   #+RESULTS[47a6e4b2974c652cd3af0f684200bb8f1b8be623]:
+   #+begin_export latex
+   \[P(Y\cap I) = \frac{{35}}{{200}} = {0.175}\]
+   #+end_export
+
+   #+BEGIN_SRC latex :var PYI=q2A[13,2]
+     \pgfmathparse{ PYI!=0 %
+       ? "which is not 0, so the two events are not mutually exclusive." %
+       : "which is 0, so the two events are mutually exclusive."}
+     \pgfmathresult
+   #+END_SRC
+
+   #+RESULTS[15f578969d71b409d52e1c2af0dfbda892e08879]:
+   #+begin_export latex
+   \pgfmathparse{ 0.175!=0 %
+     ? "which is not 0, so the two events are not mutually exclusive." %
+     : "which is 0, so the two events are mutually exclusive."}
+   \pgfmathresult
+   #+end_export
+
+5. We compare \(P(Y|I)\) with \(P(Y)\).  We have
+   #+BEGIN_SRC latex :var YI=q2A[1,2] :var sumT=q2A[12,2] :var sumI=q2A[9,2] PYgI=q2A[15,2]
+     \[P(Y|I) = \frac{P(Y\cap I)}{P(I)} = \frac{ YI / sumT }{ sumI/sumT }
+     = \frac{YI}{sumI} = PYgI\]
+   #+END_SRC
+
+   #+RESULTS[06d7909f93cb799973f4e8e6c673885592864ff5]:
+   #+begin_export latex
+   \[P(Y|I) = \frac{P(Y\cap I)}{P(I)} = \frac{ 35 / 200 }{ 65/200 }
+   = \frac{35}{65} = 0.5385\]
+   #+end_export
+
+   and 
+   #+BEGIN_SRC latex :var sumY=q2A[7,2] sumT=q2A[12,2] PYalone=q2A[16,2]
+     \[P(Y) = \frac{sumY}{sumT} = {PYalone}\]
+   #+END_SRC
+
+   #+RESULTS[018d842e65141cec3e7be6fe93412f942c5f1ee4]:
+   #+begin_export latex
+   \[P(Y) = \frac{90}{200} = {0.45}\]
+   #+end_export
+
+   Since
+   #+BEGIN_SRC latex :var PYalone=q2A[16,2] PYgI=q2A[15,2]
+     \pgfmathparse{ PYalone == PYgI %
+       ? "the two are equal, the events are independent." %
+       : "the two are different, the events are dependent."}
+     \pgfmathresult
+   #+END_SRC
+
+   #+RESULTS[73dc5f7f3c12c2243d3ac408a62433959013a952]:
+   #+begin_export latex
+   \pgfmathparse{ 0.45 == 0.5385 %
+     ? "the two are equal, the events are independent." %
+     : "the two are different, the events are dependent."}
+   \pgfmathresult
+   #+end_export
+
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q2B-data
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q2B-data
+| 45 | 35 | 15 |
+| 20 | 50 | 35 |
+
+# Note: Questions B and C may be materially different from Question A
+
+*** Question
+A city councillor was
+interested in determining whether people between the ages of 18 and
+30 would hold different opinions on a proposed bylaw than people
+over 30.  The councillor polled a sample
+of call_q2-sumT() {{{results(200 )}}}
+people from his
+district.  The resulting data are shown in the table below.
+#+CALL: q2-question-table()
+
+#+RESULTS[800f3d9fdfeb686585fc45c9907a4890b325589b]:
+| Age                   | In Favour (I) | Against (A) | No Opinion (N) | Total |
+| 18--30 Years Old (Y)  |            45 |          35 |             15 |       |
+| Over 30 Years Old (O) |            20 |          50 |             35 |       |
+| Total                 |               |             |                |       |
+
+Complete the table above and answer the following questions.
+1. What is the probability that a person polled would be over 30
+   and in favour of the bylaw?
+2. What is the probability that a person polled would be over 30
+   or in favour of the bylaw?
+3. Given that a person polled is in favour of the bylaw, what is
+   the probability that they are over 30?
+4. Are the events ``a person polled is over 30'' and ``a person
+   polled is in favour of the bylaw'' mutually exclusive?  Justify
+   your answer by calculating the appropriate probabilities.
+5. Are the events ``a person polled is over 30'' and ``a person
+   polled is in favour of the bylaw'' independent?  Justify your
+   answer by calculating the appropriate probabilities.
+*** Hint
+1. This is an `and' question; the intersection of a row and column is
+   the numerator, and the total number of people polled is the denominator.
+2. This is an `or' question; the numerator is the sum of items in an L or T
+   shape, and the denominator is the total number people polled.  Or use
+   the inclusion/exclusion formula \( P(A\cup B) = P(A) + P(B) - P(A\cap B)\).
+3. This is a `given' question, a conditional probability question.  \(P(A|B)
+   = P(A\cap B)/P(B)\).
+4. Calculate the probability of \(P(A\cap B)\) and compare it to 0.
+   The events are mutually exclusive if \(P(A\cap B)=0\); otherwise the
+   events are not mutually exclusive.
+5. Calculate the probability \(P(A|B)\) and compare it to \(P(A)\).  If
+   the probabilities are the same, the events \(A\) and \(B\)
+   are independent; otherwise they are dependent.
+*** Answer
+1. \(P(O\cap I) = \) call_q2-POI() {{{results(0.1 )}}}
+2. \(P(O\cup I) = \) call_q2-POorI() {{{results(0.75 )}}}
+3. \(P(O|I) = \) call_q2-POgI() {{{results(0.3077 )}}}
+4. \(P(O\cap I) = \) call_q2-POI() {{{results(0.1 )}}}
+   call_q2-OIExclusiveDecision() {{{results(\( P(O\cap I) \ne 0 \) so events O and I are not mutually exclusive )}}}.
+5. \(P(O|I) = \) call_q2-POgI() {{{results(0.3077 )}}}
+   \(P(O) = \) call_q2-POalone() {{{results(0.525 )}}}
+   call_q2-OIIndependentDecision() {{{results(\( P(O|I) \ne P(O) \) so events O and I are dependent )}}}.
+
+*** TODO Solution
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q2C-data
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q2C-data
+| 40 | 40 | 15 |
+| 25 | 45 | 35 |
+*** Question
+A city councillor was
+interested in determining whether people between the ages of 18 and
+30 would hold different opinions on a proposed bylaw than people
+over 30.  The councillor polled a sample
+of call_q2-sumT() {{{results(200 )}}}
+people from his
+district.  The resulting data are shown in the table below.
+#+CALL: q2-question-table()
+
+#+RESULTS[4848a42f4964542e5990562ac8ea03ada21b9e1e]:
+| Age                   | In Favour (I) | Against (A) | No Opinion (N) | Total |
+| 18--30 Years Old (Y)  |            40 |          40 |             15 |       |
+| Over 30 Years Old (O) |            25 |          45 |             35 |       |
+| Total                 |               |             |                |       |
+
+Complete the table above and answer the following questions.
+1. What is the probability that a person polled would be over 30
+   and against the bylaw?
+2. What is the probability that a person polled would be over 30
+   or against of the bylaw?
+3. Given that a person polled is against the bylaw, what is
+   the probability that they are over 30?
+4. Are the events ``a person polled is over 30'' and ``a person
+   polled is against the bylaw'' mutually exclusive?  Justify
+   your answer by calculating the appropriate probabilities.
+5. Are the events ``a person polled is over 30'' and ``a person
+   polled is against the bylaw'' independent?  Justify your
+   answer by calculating the appropriate probabilities.
+*** Hint
+1. This is an `and' question; the intersection of a row and column is
+   the numerator, and the total number of people polled is the denominator.
+2. This is an `or' question; the numerator is the sum of items in an L or T
+   shape, and the denominator is the total number people polled.  Or use
+   the inclusion/exclusion formula \( P(A\cup B) = P(A) + P(B) - P(A\cap B)\).
+3. This is a `given' question, a conditional probability question.  \(P(A|B)
+   = P(A\cap B)/P(B)\).
+4. Calculate the probability of \(P(A\cap B)\) and compare it to 0.
+   The events are mutually exclusive if \(P(A\cap B)=0\); otherwise the
+   events are not mutually exclusive.
+5. Calculate the probability \(P(A|B)\) and compare it to \(P(A)\).  If
+   the probabilities are the same, the events \(A\) and \(B\)
+   are independent; otherwise they are dependent.
+*** Answer
+1. \(P(O\cap A) = \) call_q2-POA() {{{results(0.225 )}}}
+2. \(P(O\cup A) = \) call_q2-POorA() {{{results(0.725 )}}}
+3. \(P(O|A) = \) call_q2-POgA() {{{results(0.5294 )}}}
+4. \(P(O\cap A) = \) call_q2-POA() {{{results(0.225 )}}}
+   call_q2-OAExclusiveDecision() {{{results(\( P(O\cap A) \ne 0 \) so events O and A are not mutually exclusive )}}}.
+5. \(P(O|A) = \) call_q2-POgA() {{{results(0.5294 )}}}
+   \(P(O) = \) call_q2-POalone() {{{results(0.525 )}}}
+   call_q2-OAIndependentDecision() {{{results(\( P(O|A) \ne P(O) \) so events O and A are dependent )}}}.
+
+*** TODO Solution
+
+* Question 3
+** Maxima :noexport:
+#+NAME: q3-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  if constantp(parameters)
+  then block(
+    nval: parameters[1][1]
+    ,kval: parameters[1][2]
+    ,pval: parameters[1][3]
+    ,nlrg: parameters[1][4]
+    ,klrg: parameters[1][5]
+    )
+  else block(
+    /* TODO: randomly generate the parameters (based on a seed) */
+    /* TODO: randomly generate the data (based on a seed) */
+    nval:    11
+    ,kval:    3    
+    ,pval:    0.22
+    ,nlrg:  333
+    ,klrg:   55
+    );
+  fpprintprec: 4$
+  load("distrib")$
+  ppct:    100*pval;
+  pxisk:   pdf_binomial(kval, nval, pval);   /* P(x=k)    */
+  pxltk:   cdf_binomial(kval-1, nval, pval); /* P(x<k)    */
+  pxgtk:   1-cdf_binomial(kval, nval, pval); /* P(x>k)    */
+  muval:   nlrg*pval;                        /* mu        */
+  sigma:   sqrt(nlrg*pval*(1-pval));
+  z0val:   float((klrg+0.5-muval)/sigma);    /* z0        */
+  pzltz0:  float(cdf_normal(z0val, 0, 1));   /* P(Z < z0) */
+#+END_SRC
+
+#+RESULTS[606c273c25e1bd379edc126e9d1b18c0030efec9]: q3-maxima
+
+#+NAME: q3-nval
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(nval);
+#+END_SRC
+
+#+RESULTS[0de71ac0a60a23648985a143e72f1eff7bb96968]: q3-nval
+:results:
+11 
+:end:
+
+#+NAME: q3-kval
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(kval);
+#+END_SRC
+
+#+RESULTS[9a5e9d5aa04ac0171387a69944bab94be1dad435]: q3-kval
+:results:
+3 
+:end:
+
+#+NAME: q3-pval
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(pval);
+#+END_SRC
+
+#+RESULTS[e428a4b80832a46689355dca7443316243122d9f]: q3-pval
+:results:
+0.22 
+:end:
+
+#+NAME: q3-nlrg
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(nlrg);
+#+END_SRC
+
+#+RESULTS[d836bf490e20733e83859749b459d1d4afed32ce]: q3-nlrg
+:results:
+333 
+:end:
+
+#+NAME: q3-klrg
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(klrg);
+#+END_SRC
+
+#+RESULTS[cd71811b3d67c554abd4f5492f21404a6dfb8ce9]: q3-klrg
+:results:
+55 
+:end:
+
+#+NAME: q3-ppct
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(ppct);
+#+END_SRC
+
+#+RESULTS[862b7a056ce3096ecdce90c89206307cc75d5973]: q3-ppct
+:results:
+22.0 
+:end:
+
+#+NAME: q3-pxisk
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(pxisk);
+#+END_SRC
+
+#+RESULTS[a119e725c3e31e4020a1799c9ff7f506c9bf1120]: q3-pxisk
+:results:
+0.2407 
+:end:
+
+#+NAME: q3-pxltk
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(pxltk);
+#+END_SRC
+
+#+RESULTS[6cde140bfb3582662fa6fcdcc4f30803a5ffef5b]: q3-pxltk
+:results:
+0.5512 
+:end:
+
+#+NAME: q3-pxgtk
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(pxgtk);
+#+END_SRC
+
+#+RESULTS[2756210162404f03945b9c2a7ff30f5b68783ba0]: q3-pxgtk
+:results:
+0.2081 
+:end:
+
+#+NAME: q3-muval
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(muval);
+#+END_SRC
+
+#+RESULTS[11abb9044bfc5af7cc1640f8f51f8a000d5e73ea]: q3-muval
+:results:
+73.26 
+:end:
+
+#+NAME: q3-sigma
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(sigma);
+#+END_SRC
+
+#+RESULTS[af814fa3e0349c0def8a2bbdf672afd95e4a7fd6]: q3-sigma
+:results:
+7.559 
+:end:
+
+#+NAME: q3-z0val
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(z0val);
+#+END_SRC
+
+#+RESULTS[9cae11435aab1fe0d5aa927e71312ae466fd492c]: q3-z0val
+:results:
+- 2.349 
+:end:
+
+#+NAME: q3-pzltz0
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print(pzltz0);
+#+END_SRC
+
+#+RESULTS[55d30cddae70ae5ca4e50ab3e3e12142bb9c811b]: q3-pzltz0
+:results:
+0.009401 
+:end:
+
+#+NAME: q3-pzltz0-display
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q3-maxima>>
+  print("\\[", "P\\left(Z<\\frac{x+0.5-np}{\\sqrt{npq}}\\right) =", pzltz0 , "\\]");
+#+END_SRC
+
+#+RESULTS[0de1dd9208965509ce6792e388d0952ec9fbc3ea]: q3-pzltz0-display
+:results:
+\[ P\left(Z<\frac{x+0.5-np}{\sqrt{npq}}\right) = 0.009401 \] 
+:end:
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q3A-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q3A-parameters
+|   10 |    3 | 0.20 |  300 |   50 |
+
+| nval | kval | pval | nlrg | klrg |
+*** Question
+In a certain population, call_q3-ppct() {{{results(20.0 )}}}%
+of the individuals have Rh-negative blood.
+1. Suppose a random sample of call_q3-nval() {{{results(10 )}}}
+   individuals from the population donated blood one day.
+   1. What is the probability that exactly call_q3-kval() {{{results(3 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+   2. What is the probability that fewer than call_q3-kval() {{{results(3 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+   3. What is the probability that more than call_q3-kval() {{{results(3 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+2. During a major blood-donation drive, call_q3-nlrg() {{{results(300 )}}}
+   individuals gave
+   blood.  Use the normal approximation to the binomial distribution
+   to find the probability that fewer than call_q3-klrg() {{{results(50 )}}}
+   of the donors had Rh-negative blood.
+*** Hint
+This question is about proportions (counting, discrete) and
+satisfies the conditions for binomial distribution.
+1. In this part, \(n = \) call_q3-nval() {{{results(10 )}}}
+   and \(k = \) call_q3-kval() {{{results(3 )}}}.
+   1. Calculate the probability \(P(X=k)\), either using the
+      binomial distribution formula \(C^n_k p^k q^{n-k}\) or
+      tables.
+   2. Calculate the probability \(P(X< k)\).  Tables are the best
+      choice but the formula will work too, but will be slow.
+   3. Calculate the probability \(P(X> k)\).  Tables are the best
+      choice but the formula will work too but will be slow.
+2. In this part, \(n = \) call_q3-nlrg() {{{results(300 )}}}
+   is too
+   large to use the binomial formula or tables, so we use the normal
+   approximation to the binomial instead.  Check that \(np>5\) and
+   \(nq>5\).  Apply the appropriate continuity correction, calculate
+   the mean \(\mu=np\) and standard deviation \(\sigma=\sqrt{npq}\),
+   calculate the \(z\)-score \[z=\frac{x\pm 0.5 -\mu}{\sigma},\] and
+   look up the probability \(P(Z< z)\) on the standard normal table.
+*** Answer
+1.
+   1. \(P(X = k) = \) call_q3-pxisk() {{{results(0.2013 )}}}
+   2. \(P(X < k) = \) call_q3-pxltk() {{{results(0.6778 )}}}
+   3. \(P(X > k) = \) call_q3-pxgtk() {{{results(0.1209 )}}}
+2. call_q3-pzltz0-display() {{{results(\[ P\left(Z<\frac{x+0.5-np}{\sqrt{npq}}\right) = 0.08516 \] )}}}
+*** TODO Solution
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q3B-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q3B-parameters
+|   10 |    4 | 0.20 |  200 |   35 |
+
+| nval | kval | pval | nlrg | klrg |
+*** Question
+In a certain population, call_q3-ppct() {{{results(20.0 )}}}%
+of the individuals have Rh-negative blood.
+1. Suppose a random sample of call_q3-nval() {{{results(10 )}}}
+   individuals from the population donated blood one day.
+   1. What is the probability that exactly call_q3-kval() {{{results(4 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+   2. What is the probability that fewer than call_q3-kval() {{{results(4 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+   3. What is the probability that more than call_q3-kval() {{{results(4 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+2. During a major blood-donation drive, call_q3-nlrg() {{{results(200 )}}}
+   individuals gave
+   blood.  Use the normal approximation to the binomial distribution
+   to find the probability that fewer than call_q3-klrg() {{{results(35 )}}}
+   of the donors had Rh-negative blood.
+*** Hint
+This question is about proportions (counting, discrete) and
+satisfies the conditions for binomial distribution.
+1. In this part, \(n = \) call_q3-nval() {{{results(10 )}}}
+   and \(k = \) call_q3-kval() {{{results(4 )}}}.
+   1. Calculate the probability \(P(X=k)\), either using the
+      binomial distribution formula \(C^n_k p^k q^{n-k}\) or
+      tables.
+   2. Calculate the probability \(P(X< k)\).  Tables are the best
+      choice but the formula will work too, but will be slow.
+   3. Calculate the probability \(P(X> k)\).  Tables are the best
+      choice but the formula will work too but will be slow.
+2. In this part, \(n = \) call_q3-nlrg() {{{results(200 )}}}
+   is too
+   large to use the binomial formula or tables, so we use the normal
+   approximation to the binomial instead.  Check that \(np>5\) and
+   \(nq>5\).  Apply the appropriate continuity correction, calculate
+   the mean \(\mu=np\) and standard deviation \(\sigma=\sqrt{npq}\),
+   calculate the \(z\)-score \[z=\frac{x\pm 0.5 -\mu}{\sigma},\] and
+   look up the probability \(P(Z< z)\) on the standard normal table.
+*** Answer
+1.
+   1. \(P(X = k) = \) call_q3-pxisk() {{{results(0.08808 )}}}
+   2. \(P(X < k) = \) call_q3-pxltk() {{{results(0.8791 )}}}
+   3. \(P(X > k) = \) call_q3-pxgtk() {{{results(0.03279 )}}}
+2. call_q3-pzltz0-display() {{{results(\[ P\left(Z<\frac{x+0.5-np}{\sqrt{npq}}\right) = 0.2132 \] )}}}
+*** TODO Solution
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q3C-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q3C-parameters
+|   10 |    5 | 0.20 |  250 |   40 |
+
+| nval | kval | pval | nlrg | klrg |
+*** Question
+In a certain population, call_q3-ppct() {{{results(20.0 )}}}%
+of the individuals have Rh-negative blood.
+1. Suppose a random sample of call_q3-nval() {{{results(10 )}}}
+   individuals from the population donated blood one day.
+   1. What is the probability that exactly call_q3-kval() {{{results(5 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+   2. What is the probability that fewer than call_q3-kval() {{{results(5 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+   3. What is the probability that more than call_q3-kval() {{{results(5 )}}}
+      of the call_q3-nval() {{{results(10 )}}}
+      individuals had Rh-negative blood?
+2. During a major blood-donation drive, call_q3-nlrg() {{{results(250 )}}}
+   individuals gave
+   blood.  Use the normal approximation to the binomial distribution
+   to find the probability that fewer than call_q3-klrg() {{{results(40 )}}}
+   of the donors had Rh-negative blood.
+*** Hint
+This question is about proportions (counting, discrete) and
+satisfies the conditions for binomial distribution.
+1. In this part, \(n = \) call_q3-nval() {{{results(10 )}}}
+   and \(k = \) call_q3-kval() {{{results(5 )}}}.
+   1. Calculate the probability \(P(X=k)\), either using the
+      binomial distribution formula \(C^n_k p^k q^{n-k}\) or
+      tables.
+   2. Calculate the probability \(P(X< k)\).  Tables are the best
+      choice but the formula will work too, but will be slow.
+   3. Calculate the probability \(P(X> k)\).  Tables are the best
+      choice but the formula will work too but will be slow.
+2. In this part, \(n = \) call_q3-nlrg() {{{results(250 )}}}
+   is too
+   large to use the binomial formula or tables, so we use the normal
+   approximation to the binomial instead.  Check that \(np>5\) and
+   \(nq>5\).  Apply the appropriate continuity correction, calculate
+   the mean \(\mu=np\) and standard deviation \(\sigma=\sqrt{npq}\),
+   calculate the \(z\)-score \[z=\frac{x\pm 0.5 -\mu}{\sigma},\] and
+   look up the probability \(P(Z< z)\) on the standard normal table.
+*** Answer
+1.
+   1. \(P(X = k) = \) call_q3-pxisk() {{{results(0.02642 )}}}
+   2. \(P(X < k) = \) call_q3-pxltk() {{{results(0.9672 )}}}
+   3. \(P(X > k) = \) call_q3-pxgtk() {{{results(0.006369 )}}}
+2. call_q3-pzltz0-display() {{{results(\[ P\left(Z<\frac{x+0.5-np}{\sqrt{npq}}\right) = 0.06654 \] )}}}
+*** TODO Solution
+
+
+* Question 4
+** Maxima :noexport:
+#+NAME: q4-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  if constantp(parameters)
+    then block(
+      mean: parameters[1][1]
+      ,stddev: parameters[1][2]
+      ,maxweight: parameters[1][3]
+      ,passengers: parameters[1][4]
+      )
+    else block(
+      /* TODO: randomly generate the data */
+      mean: 18
+      ,stddev: 8
+      ,maxweight: 22
+      ,passengers: 31
+    );
+  load("distrib");
+  fpprintprec: 4$
+  zscore:   float((maxweight - mean)/stddev);
+  pvalue:   float(1 - cdf_normal(zscore, 0, 1));
+  stderror: float(stddev/sqrt(passengers));
+  zscore2:  float((maxweight - mean)/stderror);
+  pvalue2:  float(1 - cdf_normal(zscore2, 0, 1));
+#+END_SRC
+
+#+RESULTS[3863f92d487b8ad1120142e42af90c3fe8b58006]: q4-maxima
+
+#+NAME: q4-mean
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q4-maxima>>
+  print(mean);
+#+END_SRC
+
+#+RESULTS[02621149776dfd37d581ce8eabc40405a0d8e4f8]: q4-mean
+:results:
+18 
+:end:
+
+#+NAME: q4-stddev
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q4-maxima>>
+  print(stddev);
+#+END_SRC
+
+#+RESULTS[caae0ea658d4a0156fd30174d071f07e797e7c27]: q4-stddev
+:results:
+8 
+:end:
+
+#+NAME: q4-maxweight
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q4-maxima>>
+  print(maxweight);
+#+END_SRC
+
+#+RESULTS[86c6372c4ee840b7eaff3f32217da21401cc9b7d]: q4-maxweight
+:results:
+22 
+:end:
+
+#+NAME: q4-passengers
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q4-maxima>>
+  print(passengers);
+#+END_SRC
+
+#+RESULTS[16aa15260093cb40e1b8ae56a9122cea02046529]: q4-passengers
+:results:
+31 
+:end:
+
+#+NAME: q4-pvalue
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q4-maxima>>
+  print(pvalue);
+#+END_SRC
+
+#+RESULTS[3161969428e4e7b75aec0b140e6b5960d137340a]: q4-pvalue
+:results:
+0.3085 
+:end:
+
+#+NAME: q4-pvalue2
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q4-maxima>>
+  print(pvalue2);
+#+END_SRC
+
+#+RESULTS[ef86dede380b2642f4012eccce8c258e913d3962]: q4-pvalue2
+:results:
+0.002686 
+:end:
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q4A-parameters
+:END:
+*** Parameters :noexport:
+#+NAME: q4A-parameters
+| 19 | 9 | 23 | 33 |
+*** Question
+The weight of a bag checked by
+Canadian airline passengers is a normally distributed random
+variable with a mean of
+call_q4-mean() {{{results(19 )}}}
+kg and a standard deviation of
+call_q4-stddev() {{{results(9 )}}}
+kg.  The maximum weight for a regular (as opposed to overweight) bag is
+call_q4-maxweight() {{{results(23 )}}}
+kg.
+1. What is the probability that a randomly selected passenger's
+   bag will exceed the maximum weight for a regular bag?  Please give
+   your answer accurate to four decimal points.
+2. Given a random selection of
+   call_q4-passengers() {{{results(33 )}}}
+   passengers' bags, what is the
+   probability that the average weight of the bags will exceed the
+   maximum weight for a regular bag?  Please give your answer
+   accurate to four decimal points.
+*** TODO Hint
+*** Answer
+1. \( p = \) call_q4-pvalue() {{{results(0.3284 )}}}
+2. \( p = \) call_q4-pvalue2() {{{results(0.005338 )}}}
+*** TODO Solution
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q4B-parameters
+:END:
+*** Parameters :noexport:
+#+NAME: q4B-parameters
+| 19 | 8 | 23 | 35 |
+
+*** Question
+The weight of a bag checked by
+Canadian airline passengers is a normally distributed random
+variable with a mean of
+call_q4-mean() {{{results(19 )}}}
+kg and a standard deviation of
+call_q4-stddev() {{{results(8 )}}}
+kg.  The maximum weight for a regular (as opposed to overweight) bag is
+call_q4-maxweight() {{{results(23 )}}}
+kg.
+1. What is the probability that a randomly selected passenger's
+   bag will exceed the maximum weight for a regular bag?  Please give
+   your answer accurate to four decimal points.
+2. Given a random selection of
+   call_q4-passengers() {{{results(35 )}}}
+   passengers' bags, what is the
+   probability that the average weight of the bags will exceed the
+   maximum weight for a regular bag?  Please give your answer
+   accurate to four decimal points.
+*** TODO Hint
+*** Answer
+1. \( p = \) call_q4-pvalue() {{{results(0.3085 )}}}
+2. \( p = \) call_q4-pvalue2() {{{results(0.001548 )}}}
+*** TODO Solution
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q4C-parameters
+:END:
+*** Parameters :noexport:
+#+NAME: q4C-parameters
+| 19 | 10 | 23 | 34 |
+*** Question
+The weight of a bag checked by
+Canadian airline passengers is a normally distributed random
+variable with a mean of
+call_q4-mean() {{{results(19 )}}}
+kg and a standard deviation of
+call_q4-stddev() {{{results(10 )}}}
+kg.  The maximum weight for a regular (as opposed to overweight) bag is
+call_q4-maxweight() {{{results(23 )}}}
+kg.
+1. What is the probability that a randomly selected passenger's
+   bag will exceed the maximum weight for a regular bag?  Please give
+   your answer accurate to four decimal points.
+2. Given a random selection of
+   call_q4-passengers() {{{results(34 )}}}
+   passengers' bags, what is the
+   probability that the average weight of the bags will exceed the
+   maximum weight for a regular bag?  Please give your answer
+   accurate to four decimal points.
+*** TODO Hint
+*** Answer
+1. \( p = \) call_q4-pvalue() {{{results(0.3446 )}}}
+2. \( p = \) call_q4-pvalue2() {{{results(0.00984 )}}}
+*** TODO Solution
+
+
+* Question 5
+** TODO Maxima                                                     :noexport:
+#+NAME: q5-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  if constantp(indata)
+    then block(
+      xs: indata[1]
+      ,ys: indata[2]
+      )
+    else block(
+      /* TODO: randomly generate the data */
+     xs: [10, 15, 20, 25, 30, 35]
+     ,ys: [320, 300, 290, 270, 240, 200]
+    );
+  if constantp(parameters)
+    then block(
+      age: parameters[1][1]
+      )
+    else block(
+      /* TODO: randomly generate the parameter */
+      age: 27
+    );
+  load("distrib");
+  fpprintprec: 4$
+  x2s:    makelist(x^2, x, xs);
+  xys:    makelist(xs[i]*ys[i], i, 1, length(xs));
+  y2s:    makelist(y^2, y, ys);
+  nval:   length(xs);
+  sumx:   lsum(z, z, xs);
+  sumy:   lsum(z, z, ys);
+  sumx2:  lsum(z, z, x2s);
+  sumxy:  lsum(z, z, xys);
+  sumy2:  lsum(z, z, y2s);
+  xbar:   float(sumx/nval);
+  ybar:   float(sumy/nval);
+  sxval:  float(sqrt( (sumx2 - (sumx^2/nval))    / (nval-1) ));
+  syval:  float(sqrt( (sumy2 - (sumy^2/nval))    / (nval-1) ));
+  covval: float(      (sumxy - (sumx*sumy/nval)) / (nval-1) );
+  rval:   float(covval/(sxval*syval));
+  bval:   rval*syval/sxval;
+  aval:   ybar - bval*xbar;
+  line:   Y = aval + bval * X;
+  price:  float(aval + bval * age);
+#+END_SRC
+
+#+RESULTS[7bd6990def240c2d5e25ff8239173d619c2777ad]: q5-maxima
+
+#+NAME: q5-syval
+#+HEADER: :results drawer :noweb yes
+#+BEGIN_SRC maxima
+  <<q5-maxima>>
+  print(syval);
+#+END_SRC
+
+#+RESULTS[10c6d9cc9c18356965477e09ed6f0cb0605ad776]: q5-syval
+:results:
+43.82 
+:end:
+
+#+NAME: q5-sxval
+#+HEADER: :results drawer :noweb yes
+#+BEGIN_SRC maxima
+  <<q5-maxima>>
+  print(sxval);
+#+END_SRC
+
+#+RESULTS[bc0968be29269aa67293ee41145e80dc69391363]: q5-sxval
+:results:
+9.354 
+:end:
+
+#+NAME: q5-covval
+#+HEADER: :results drawer :noweb yes
+#+BEGIN_SRC maxima
+  <<q5-maxima>>
+  print(covval);
+#+END_SRC
+
+#+RESULTS[440b4081b55c8ecd1d4672d14cd29adea2df02ee]: q5-covval
+:results:
+- 400.0 
+:end:
+
+#+NAME: q5-age
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q5-maxima>>
+  print(age);
+#+END_SRC
+
+#+RESULTS[48e00701f5d97bb96219ae9aca347d47457b691c]: q5-age
+:results:
+27 
+:end:
+
+#+NAME: q5-rval
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q5-maxima>>
+  print(rval);
+#+END_SRC
+
+#+RESULTS[1b0f4d7d6077dbb4c5a83f6c2cd8e8236dd06901]: q5-rval
+:results:
+- 0.9759 
+:end:
+
+
+#+NAME: q5-line-display
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q5-maxima>>
+  print("\\[ ", tex1(line), " \\]");
+#+END_SRC
+
+#+RESULTS[6375d1a42a89247d78fb1b565d9290012a7d2619]: q5-line-display
+:results:
+\[  Y=372.9-4.571\,X  \] 
+:end:
+
+
+#+NAME: q5-price
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q5-maxima>>
+  print(price);
+#+END_SRC
+
+#+RESULTS[0989d9fb4e55d52379eb4a903fb08b57d7595373]: q5-price
+:results:
+249.4 
+:end:
+
+
+#+NAME: q5-question
+#+HEADER: :exports output :results table :noweb yes
+#+BEGIN_SRC maxima 
+  <<q5-maxima>>
+  printf(true, "Age (\\(x\\)), ");
+  printf(true, "~{~a~^, ~}~%", xs);
+  printf(true, "Price (\\(y\\)), ");
+  printf(true, "~{~a~^, ~}~%", ys);
+#+END_SRC
+
+#+RESULTS[9e5b4143e27de31b7cf8f2df139619fcff060182]: q5-question
+| Age (\(x\))   |  10 |  15 |  20 |  25 |  30 |  35 |
+| Price (\(y\)) | 320 | 300 | 290 | 270 | 240 | 200 |
+
+#+NAME: q5-table
+#+HEADER: :exports results :results table :noweb yes
+#+BEGIN_SRC maxima 
+  <<q5-maxima>>
+  printf(true, "~{~a~^, ~}~%", endcons(sumx,  xs));
+  printf(true, "~{~a~^, ~}~%", endcons(sumy,  ys));
+  printf(true, "~{~a~^, ~}~%", endcons(sumx2, x2s));
+  printf(true, "~{~a~^, ~}~%", endcons(sumxy, xys));
+  printf(true, "~{~a~^, ~}~%", endcons(sumy2, y2s));
+#+END_SRC
+
+#+RESULTS[17cbea5fada2770ac24c04a12ebdfdec13c63505]: q5-table
+|     10 |    15 |    20 |    25 |    30 |    35 |    135 |
+|    320 |   300 |   290 |   270 |   240 |   200 |   1620 |
+|    100 |   225 |   400 |   625 |   900 |  1225 |   3475 |
+|   3200 |  4500 |  5800 |  6750 |  7200 |  7000 |  34450 |
+| 102400 | 90000 | 84100 | 72900 | 57600 | 40000 | 447000 |
+
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q5A-parameter indata=q5A-data
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q5A-data
+|  40 |  25 |  32 |  19 |  15 |  37 |
+| 190 | 215 | 195 | 250 | 255 | 175 |
+
+#+NAME: q5A-parameter
+| 23 |
+*** Question
+A real estate agent is
+interested in knowing whether there is a relationship between the
+age of a house in a particular neighborhood and the selling
+price.  Listed below are the ages (in years) and selling prices (in
+thousands of dollars) of a sample of six houses the agent has sold in the past
+year:
+#+CALL: q5-question()
+
+#+RESULTS[9b901286154607f7567ccc541d0379c50f350768]:
+| Age (\(x\))   |  40 |  25 |  32 |  19 |  15 |  37 |
+| Price (\(y\)) | 190 | 215 | 195 | 250 | 255 | 175 |
+
+1. Calculate the correlation coefficient.
+2. Find the equation of the regression line.
+3. What would you expect to be the selling price of
+   a call_q5-age() {{{results(23 )}}}
+   year old house in the neighborhood?
+*** TODO Hint
+*** Answer
+1. The covariance is
+   \(s_{xy} = \) call_q5-covval() {{{results(- 315.0 )}}}.
+
+   The standard deviation of the \(x\)s is
+   \(s_x =\) call_q5-sxval() {{{results(10.0 )}}}.
+
+   The standard deviation of the \(y\)s is
+   \(s_y =\) call_q5-syval() {{{results(32.96 )}}}.
+   
+   The Pearson correlation coefficient is
+   \(r = \) call_q5-rval() {{{results(- 0.9556 )}}}
+2. The equation of the line of best fit
+   is call_q5-line-display() {{{results(\[  Y=301.5-3.15\\\,X  \] )}}}
+3. The expected value of the house is call_q5-price() {{{results(229.1 )}}}
+   thousand dollars.
+*** TODO Solution
+The completed table is
+#+RESULTS[1b4101f7154918a11c50c24304de25035302dc17]: q5A-table
+|    40 |    25 |    32 |    19 |    35 |    37 |
+|   190 |   215 |   195 |   250 |   255 |   175 |
+|  1600 |   625 |  1024 |   361 |  1225 |  1369 |
+|  7600 |  5375 |  6240 |  4750 |  8925 |  6475 |
+| 36100 | 46225 | 38025 | 62500 | 65025 | 30625 |
+
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q5B-parameter indata=q5B-data
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q5B-data
+|  40 |  25 |  32 |  19 |  15 |  37 |
+| 190 | 215 | 195 | 250 | 255 | 175 |
+
+#+NAME: q5B-parameter
+| 28 |
+*** Question
+A real estate agent is
+interested in knowing whether there is a relationship between the
+age of a house in a particular neighborhood and the selling
+price.  Listed below are the ages (in years) and selling prices (in
+thousands of dollars) of a sample of six houses the agent has sold in the past
+year:
+#+CALL: q5-question()
+
+#+RESULTS[7ec61a0074c2b5afa3fc9ed6af0d90dd9b284c84]:
+| Age (\(x\))   |  40 |  25 |  32 |  19 |  15 |  37 |
+| Price (\(y\)) | 190 | 215 | 195 | 250 | 255 | 175 |
+
+1. Calculate the correlation coefficient.
+2. Find the equation of the regression line.
+3. What would you expect to be the selling price of
+   a call_q5-age() {{{results(28 )}}}
+   year old house in the neighborhood?
+*** TODO Hint
+*** Answer
+1. The covariance is
+   \(s_{xy} = \) call_q5-covval() {{{results(- 315.0 )}}}.
+
+   The standard deviation of the \(x\)s is
+   \(s_x =\) call_q5-sxval() {{{results(10.0 )}}}.
+
+   The standard deviation of the \(y\)s is
+   \(s_y =\) call_q5-syval() {{{results(32.96 )}}}.
+   
+   The Pearson correlation coefficient is
+   \(r = \) call_q5-rval() {{{results(- 0.9556 )}}}
+2. The equation of the line of best fit
+   is call_q5-line-display() {{{results(\[  Y=301.5-3.15\\\,X  \] )}}}
+3. The expected value of the house is call_q5-price() {{{results(213.3 )}}}
+   thousand dollars.
+*** TODO Solution
+The completed table is
+#+RESULTS[1b4101f7154918a11c50c24304de25035302dc17]: q5A-table
+|    40 |    25 |    32 |    19 |    35 |    37 |
+|   190 |   215 |   195 |   250 |   255 |   175 |
+|  1600 |   625 |  1024 |   361 |  1225 |  1369 |
+|  7600 |  5375 |  6240 |  4750 |  8925 |  6475 |
+| 36100 | 46225 | 38025 | 62500 | 65025 | 30625 |
+
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q5C-parameter indata=q5C-data
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q5C-data
+|  40 |  25 |  32 |  19 |  15 |  37 |
+| 190 | 215 | 195 | 250 | 255 | 175 |
+
+#+NAME: q5C-parameter
+| 34 |
+
+*** Question
+A real estate agent is
+interested in knowing whether there is a relationship between the
+age of a house in a particular neighborhood and the selling
+price.  Listed below are the ages (in years) and selling prices (in
+thousands of dollars) of a sample of six houses the agent has sold in the past
+year:
+#+CALL: q5-question()
+
+#+RESULTS[66fb85a84cd742b7536cc87607757dd9cb5ff0c2]:
+| Age (\(x\))   |  40 |  25 |  32 |  19 |  15 |  37 |
+| Price (\(y\)) | 190 | 215 | 195 | 250 | 255 | 175 |
+
+1. Calculate the correlation coefficient.
+2. Find the equation of the regression line.
+3. What would you expect to be the selling price of
+   a call_q5-age() {{{results(34 )}}}
+   year old house in the neighborhood?
+*** TODO Hint
+*** Answer
+1. The covariance is
+   \(s_{xy} = \) call_q5-covval() {{{results(- 315.0 )}}}.
+
+   The standard deviation of the \(x\)s is
+   \(s_x =\) call_q5-sxval() {{{results(10.0 )}}}.
+
+   The standard deviation of the \(y\)s is
+   \(s_y =\) call_q5-syval() {{{results(32.96 )}}}.
+   
+   The Pearson correlation coefficient is
+   \(r = \) call_q5-rval() {{{results(- 0.9556 )}}}
+2. The equation of the line of best fit
+   is call_q5-line-display() {{{results(\[  Y=301.5-3.15\\\,X  \] )}}}
+3. The expected value of the house is call_q5-price() {{{results(194.4 )}}}
+   thousand dollars.
+*** TODO Solution
+The completed table is
+#+RESULTS[1b4101f7154918a11c50c24304de25035302dc17]: q5A-table
+|    40 |    25 |    32 |    19 |    35 |    37 |
+|   190 |   215 |   195 |   250 |   255 |   175 |
+|  1600 |   625 |  1024 |   361 |  1225 |  1369 |
+|  7600 |  5375 |  6240 |  4750 |  8925 |  6475 |
+| 36100 | 46225 | 38025 | 62500 | 65025 | 30625 |
+
+
+* Question 6
+** Maxima :noexport:
+#+NAME: q6-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  if constantp(parameters)
+    then block(
+      bound: parameters[1][1],
+      sigma: parameters[1][2]
+      )
+    else block(
+      /* TODO: randomly generate the data */
+      bound: 4,
+      sigma: 15
+    );
+  fpprintprec: 4$
+  n: ceiling( (1.96*sigma/bound)^2 );
+#+END_SRC
+
+#+RESULTS[5b23c3dcced95d96d2e128361dabacc4cbe97193]: q6-maxima
+
+#+NAME: q6-bound
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q6-maxima>>
+  print(bound);
+#+END_SRC
+
+#+RESULTS[5ede5f028fb080667ea38bd405c061343d5aed78]: q6-bound
+:results:
+4 
+:end:
+
+#+NAME: q6-sigma
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q6-maxima>>
+  print(sigma);
+#+END_SRC
+
+#+RESULTS[0f0b37d35576e5240c63717d9daf217d9157f6dd]: q6-sigma
+:results:
+15 
+:end:
+
+#+NAME: q6-n
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q6-maxima>>
+  print(n);
+#+END_SRC
+
+#+RESULTS[42b7e972bc1e55309b3f23cd77569689ab2285f7]: q6-n
+:results:
+55 
+:end:
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q6A-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q6A-parameters
+| 3 | 10 |
+*** Question
+If a wildlife service wishes to
+estimate the mean number of days of hunting per hunter for all
+hunters licensed in the province of Saskatchewan during a given
+season, with a bound on the error of estimation equal to
+call_q6-bound() {{{results(3 )}}} 
+hunting
+days, how many hunters must be included in the survey?  Assume that
+data collected in earlier surveys have shown \(\sigma\) to be
+approximately equal to
+call_q6-sigma() {{{results(10 )}}} .
+*** TODO Hint
+*** Answer
+\(n = \) call_q6-n() {{{results(43 )}}}
+*** TODO Solution
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q6B-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q6B-parameters
+| 3.5 | 9 |
+
+*** Question
+If a wildlife service wishes to
+estimate the mean number of days of hunting per hunter for all
+hunters licensed in the province of Saskatchewan during a given
+season, with a bound on the error of estimation equal to
+call_q6-bound() {{{results(3.5 )}}} 
+hunting
+days, how many hunters must be included in the survey?  Assume that
+data collected in earlier surveys have shown \(\sigma\) to be
+approximately equal to
+call_q6-sigma() {{{results(9 )}}} .
+*** TODO Hint
+*** Answer
+\(n = \) call_q6-n() {{{results(26 )}}}
+*** TODO Solution
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q6C-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q6C-parameters
+| 2 | 11 |
+
+*** Question
+If a wildlife service wishes to
+estimate the mean number of days of hunting per hunter for all
+hunters licensed in the province of Saskatchewan during a given
+season, with a bound on the error of estimation equal to
+call_q6-bound() {{{results(2 )}}} 
+hunting
+days, how many hunters must be included in the survey?  Assume that
+data collected in earlier surveys have shown \(\sigma\) to be
+approximately equal to
+call_q6-sigma() {{{results(11 )}}} .
+*** TODO Hint
+*** Answer
+\(n = \) call_q6-n() {{{results(117 )}}}
+*** TODO Solution
+
+
+* Question 7
+** Maxima :noexport:
+#+NAME: q7-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  if constantp(parameters)
+    then block(
+      n: parameters[1][1],
+      x: parameters[1][2],
+      confidence: parameters[1][3]
+      )
+    else block(
+      /* TODO: randomly generate the data (based on a seed) */
+      n: 500,
+      x: 80,
+      confidence: 90
+    );
+  load("distrib");
+  fpprintprec: 4$
+  zalpha2: float(quantile_normal(0.5+confidence/200,0,1));
+  phat: float(x/n);
+  qhat: float(1-phat);
+  stddev: float(sqrt(phat*qhat/n));
+  me: float(zalpha2*stddev);
+  cilower: float(phat-me);
+  ciupper: float(phat+me);
+  ciInline: simplode([ "\\( [", cilower, ", ", ciupper, "] \\)"]);
+#+END_SRC
+
+#+RESULTS[e529b43545f6a50999d48d53f8c41549e1d32f6f]: q7-maxima
+
+#+NAME: q7-ciInline
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q7-maxima>>
+  print(ciInline);
+#+END_SRC
+
+#+RESULTS[414c41bee55632c97bd2bdce26ca37f40b4e26ca]: q7-ciInline
+:results:
+\( [0.133, 0.187] \) 
+:end:
+
+#+NAME: q7-n
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q7-maxima>>
+  print(n);
+#+END_SRC
+
+#+RESULTS[dd88552baa0c8e6e5968d9fc08a78efd0426163a]: q7-n
+:results:
+500 
+:end:
+
+#+NAME: q7-x
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q7-maxima>>
+  print(x);
+#+END_SRC
+
+#+RESULTS[57bf1377fd5723a701fa4851c46185641cf40d2f]: q7-x
+:results:
+80 
+:end:
+
+#+NAME: q7-confidence
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q7-maxima>>
+  print(confidence);
+#+END_SRC
+
+#+RESULTS[dd32fd62418e6dac3617512475e64a4ac3d4d9ed]: q7-confidence
+:results:
+90 
+:end:
+
+#+NAME: q7-zalpha2
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q7-maxima>>
+  print(zalpha2);
+#+END_SRC
+
+#+RESULTS[ba219511e71284ffb3c62d12e8ef0872c550711f]: q7-zalpha2
+:results:
+1.645 
+:end:
+
+#+NAME: q7-cilower
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q7-maxima>>
+  print(cilower);
+#+END_SRC
+
+#+RESULTS[6874fd2eb6f455b4845f72b4cff1b803822d45a1]: q7-cilower
+:results:
+0.133 
+:end:
+
+#+NAME: q7-ciupper
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q7-maxima>>
+  print(ciupper);
+#+END_SRC
+
+#+RESULTS[146465034c0740973a9180c9814d8c807df3e3a2]: q7-ciupper
+:results:
+0.187 
+:end:
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q7A-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q7A-parameters
+| 400 | 75 | 95 |
+*** Question
+A sample survey is designed to
+estimate the proportion of SUVs being driven in Saskatchewan.  A
+random sample of
+call_q7-n() {{{results(400 )}}} 
+registrations is selected, and
+call_q7-x() {{{results(75 )}}} 
+are
+classified as SUVs.  Use a
+call_q7-confidence() {{{results(95 )}}}%
+confidence interval to estimate the
+proportion of SUVs in Saskatchewan.
+*** TODO Hint
+*** Answer
+The confidence interval is
+call_q7-ciInline() {{{results(\( [0.1493\, 0.2257] \) )}}}
+*** TODO Solution
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q7B-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q7B-parameters
+| 500 | 88 | 95 |
+*** Question
+A sample survey is designed to
+estimate the proportion of SUVs being driven in Saskatchewan.  A
+random sample of
+call_q7-n() {{{results(500 )}}} 
+registrations is selected, and
+call_q7-x() {{{results(88 )}}} 
+are
+classified as SUVs.  Use a
+call_q7-confidence() {{{results(95 )}}}%
+confidence interval to estimate the
+proportion of SUVs in Saskatchewan.
+*** TODO Hint
+*** Answer
+The confidence interval is
+call_q7-ciInline() {{{results(\( [0.1426\, 0.2094] \) )}}}
+*** TODO Solution
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q7C-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q7C-parameters
+| 420 | 85 | 99 |
+
+*** Question
+A sample survey is designed to
+estimate the proportion of SUVs being driven in Saskatchewan.  A
+random sample of
+call_q7-n() {{{results(420 )}}} 
+registrations is selected, and
+call_q7-x() {{{results(85 )}}} 
+are
+classified as SUVs.  Use a
+call_q7-confidence() {{{results(99 )}}}%
+confidence interval to estimate the
+proportion of SUVs in Saskatchewan.
+*** TODO Hint
+*** Answer
+The confidence interval is
+call_q7-ciInline() {{{results(\( [0.1519\, 0.2529] \) )}}}
+*** TODO Solution
+
+
+* Question 8
+*** Maxima :noexport:
+#+NAME: q8-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  if constantp(parameters)
+    then block(
+      claim: parameters[1][1]
+      ,significance: parameters[1][2]
+      ,data: indata[1]
+      )
+    else block(
+      /* TODO: randomly generate the parameters (based on a seed) */
+      /* TODO: randomly generate the data (based on a seed) */
+      claim: 21.1
+      ,significance: 2
+      ,data: [ 21.3, 20.7, 21.1, 19.2, 21.5, 18.1, 19.7, 21.3, 19.1, 21.1 ]
+    );
+  load("distrib");
+  fpprintprec: 4$
+  n: length(data);
+  df: n-1;
+  mean: float(lsum(x, x, data)/n);
+  variance: float( (lsum(x^2, x, data) - lsum(x,x,data)^2/n) / (n-1));
+  stddev: float(sqrt(variance));
+  t: float( (mean - claim)/(stddev/sqrt(n)) );
+  tcrit: float( quantile_student_t( significance/100, df) );
+#+END_SRC
+
+#+RESULTS[a5a6baaf647b1124f6f269bc748ff634315e5f9d]: q8-maxima
+
+#+NAME: q8-n
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q8-maxima>>
+  print(n);
+#+END_SRC
+
+#+RESULTS[3f4d7c96cd5928c01dcf47e6bdb0b05d311d52fa]: q8-n
+:results:
+10 
+:end:
+
+#+NAME: q8-significance
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q8-maxima>>
+  print(significance);
+#+END_SRC
+
+#+RESULTS[4fa672038f2fb1645dae198db115198c3aa7770a]: q8-significance
+:results:
+2 
+:end:
+
+#+NAME: q8-claim
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q8-maxima>>
+  print(claim);
+#+END_SRC
+
+#+RESULTS[7eb35f829c5bba28dc7a6f9b3ea13a7bac101064]: q8-claim
+:results:
+21.1 
+:end:
+
+#+NAME: q8-mean
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q8-maxima>>
+  print(mean);
+#+END_SRC
+
+#+RESULTS[e76d802f8e51156366b0072a522315fefa5a1692]: q8-mean
+:results:
+20.31 
+:end:
+
+#+NAME: q8-stddev
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q8-maxima>>
+  print(stddev);
+#+END_SRC
+
+#+RESULTS[7821a85ad5f4651e842ee0f97c9e911c58e7228b]: q8-stddev
+:results:
+1.189 
+:end:
+
+#+NAME: q8-t
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q8-maxima>>
+  print(t);
+#+END_SRC
+
+#+RESULTS[8d6f385dcbb1503f4933b1039dbcaadb030dd34f]: q8-t
+:results:
+- 2.101 
+:end:
+
+#+NAME: q8-tcrit
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q8-maxima>>
+  print(tcrit);
+#+END_SRC
+
+#+RESULTS[e1167760981f648189803cbfe0438ce545ed9dcf]: q8-tcrit
+:results:
+- 2.398 
+:end:
+
+#+NAME: q8-data
+#+HEADER: :exports output :results table :noweb yes 
+#+BEGIN_SRC maxima 
+  <<q8-maxima>>
+  printf(true, "~{~a~^, ~}~%", data);
+#+END_SRC
+
+#+RESULTS[17d9c8d0a7908f50342f6efdc3ae6ba42be88a1b]: q8-data
+| 21.3 | 20.7 | 21.1 | 19.2 | 21.5 | 18.1 | 19.7 | 21.3 | 19.1 | 21.1 |
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q8A-parameters indata=q8A-data
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q8A-parameters
+| 21 | 5 |
+
+#+NAME: q8A-data
+| 21.3 | 20.7 | 21.1 | 19.2 | 21.5 | 18.1 | 19.7 | 21.3 | 19.1 | 21.1 |
+
+*** Question
+The following
+call_q8-n() {{{results(10 )}}} 
+observations
+are interest rates on unpaid balances on randomly selected
+department store credit cards:
+
+#+CALL: q8-data()
+
+#+RESULTS[0f2b2eb94260345252d1bff80003f963202dff5e]:
+| 21.3 | 20.7 | 21.1 | 19.2 | 21.5 | 18.1 | 19.7 | 21.3 | 19.1 | 21.1 |
+
+Assume that the interest rates of department store credit cards are
+approximately normally distributed.
+1. Find the mean and standard deviation of the data.
+2. A spokesperson for the industry claims that the average interest
+   rate charged by department store credit cards is less than
+   call_q8-claim() {{{results(21 )}}}%.
+   Test the claim at the
+   call_q8-significance() {{{results(5 )}}}%
+   level of significance.
+*** TODO Hint
+*** Answer
+1. Mean \(\bar{x} = \) call_q8-mean() {{{results(20.31 )}}}
+   
+   Standard deviation \(s = \) call_q8-stddev() {{{results(1.189 )}}}
+2. Null hypothesis \( H_0: \mu = \) call_q8-claim() {{{results(21 )}}}
+
+   Alternative hypothesis \( H_a: \mu < \) call_q8-claim() {{{results(21 )}}}
+
+   Test statistic \( t = \) call_q8-t() {{{results(- 1.835 )}}}
+
+   Critical value \( t_c = \) call_q8-tcrit() {{{results(- 1.833 )}}}
+*** TODO Solution
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q8B-parameters indata=q8B-data
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q8B-parameters
+| 21 | 5 |
+
+#+NAME: q8B-data
+| 21.3 | 20.7 | 20.1 | 19.2 | 21.5 | 18.1 | 19.7 | 21.3 | 19.1 | 21.1 |
+
+*** Question
+The following
+call_q8-n() {{{results(10 )}}} 
+observations
+are interest rates on unpaid balances on randomly selected
+department store credit cards:
+
+#+CALL: q8-data()
+
+#+RESULTS[a6edca1663f579b16bd25848e08141f507579d75]:
+| 21.3 | 20.7 | 20.1 | 19.2 | 21.5 | 18.1 | 19.7 | 21.3 | 19.1 | 21.1 |
+
+Assume that the interest rates of department store credit cards are
+approximately normally distributed.
+1. Find the mean and standard deviation of the data.
+2. A spokesperson for the industry claims that the average interest
+   rate charged by department store credit cards is less than
+   call_q8-claim() {{{results(21 )}}}%.
+   Test the claim at the
+   call_q8-significance() {{{results(5 )}}}%
+   level of significance.
+*** TODO Hint
+*** Answer
+1. Mean \(\bar{x} = \) call_q8-mean() {{{results(20.21 )}}}
+   
+   Standard deviation \(s = \) call_q8-stddev() {{{results(1.157 )}}}
+2. Null hypothesis \( H_0: \mu = \) call_q8-claim() {{{results(21 )}}}
+
+   Alternative hypothesis \( H_a: \mu < \) call_q8-claim() {{{results(21 )}}}
+
+   Test statistic \( t = \) call_q8-t() {{{results(- 2.159 )}}}
+
+   Critical value \( t_c = \) call_q8-tcrit() {{{results(- 1.833 )}}}
+*** TODO Solution
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q8C-parameters indata=q8C-data
+:END:
+*** TODO Parameters                                                :noexport:
+#+NAME: q8C-parameters
+| 21 | 2 |
+
+#+NAME: q8C-data
+| 18.5 | 20.7 | 20.1 | 18.1 | 21.5 | 19.1 | 19.7 | 21.3 | 18.1 | 21.1 |
+
+*** Question
+The following
+call_q8-n() {{{results(10 )}}} 
+observations
+are interest rates on unpaid balances on randomly selected
+department store credit cards:
+
+#+CALL: q8-data()
+
+#+RESULTS[230d94eff513dd12296e1d8d302fd70c2a76c730]:
+| 18.5 | 20.7 | 20.1 | 18.1 | 21.5 | 19.1 | 19.7 | 21.3 | 18.1 | 21.1 |
+
+Assume that the interest rates of department store credit cards are
+approximately normally distributed.
+1. Find the mean and standard deviation of the data.
+2. A spokesperson for the industry claims that the average interest
+   rate charged by department store credit cards is less than
+   call_q8-claim() {{{results(21 )}}}%.
+   Test the claim at the
+   call_q8-significance() {{{results(2 )}}}%
+   level of significance.
+*** TODO Hint
+*** Answer
+1. Mean \(\bar{x} = \) call_q8-mean() {{{results(19.82 )}}}
+   
+   Standard deviation \(s = \) call_q8-stddev() {{{results(1.321 )}}}
+2. Null hypothesis \( H_0: \mu = \) call_q8-claim() {{{results(21 )}}}
+
+   Alternative hypothesis \( H_a: \mu < \) call_q8-claim() {{{results(21 )}}}
+
+   Test statistic \( t = \) call_q8-t() {{{results(- 2.826 )}}}
+
+   Critical value \( t_c = \) call_q8-tcrit() {{{results(- 2.398 )}}}
+*** TODO Solution
+
+
+* Question 9
+** Maxima :noexport:
+#+NAME: q9-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  if constantp(parameters)
+  then block(
+    n: parameters[1][1]
+    ,mean1: parameters[1][2]
+    ,stdd1: parameters[1][3]
+    ,mean2: parameters[2][2]
+    ,stdd2: parameters[2][3]
+    ,significance: parameters[3][1]
+    )
+  else block(
+    /* TODO: randomly generate the parameters (based on a seed) */
+    /* TODO: randomly generate the data (based on a seed) */
+    n: 111
+    ,mean1: 33.3
+    ,stdd1: 11.1
+    ,mean2: 28.8
+    ,stdd2: 12.2
+    ,significance: 0.02
+    );
+  load("distrib");
+  fpprintprec: 4$
+  se: sqrt(stdd1^2/n + stdd2^2/n);
+  z: float( (mean1-mean2)/se );
+  p: float( 1-cdf_normal(z,0,1) );
+  zcrit: float( quantile_normal(1-significance,0,1) );
+  conclusionShort: if z < zcrit
+  then "\\( z < z_c \\) so we do not reject the null hypothesis"
+  else "\\( z > z_c \\) so we reject the null hypothesis";
+#+END_SRC
+
+#+RESULTS[be745f86b40c832545d8a4ed05e14ebcba269fd4]: q9-maxima
+
+#+NAME: q9-conclusionShort
+#+HEADER: :exports output :results drawer :noweb yes 
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(conclusionShort);
+#+END_SRC
+
+#+RESULTS[ae5c564e09637d23265ab471b887817069663dc2]: q9-conclusionShort
+:results:
+\( z > z_c \) so we reject the null hypothesis 
+:end:
+
+#+NAME: q9-n
+#+HEADER: :exports output :results drawer :noweb yes 
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(n);
+#+END_SRC
+
+#+RESULTS[569ea8a276c64d54761e311360f8a2cc546384bf]: q9-n
+:results:
+111 
+:end:
+
+
+#+NAME: q9-mean1
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(mean1);
+#+END_SRC
+
+#+RESULTS[c66c4c5cab081853c16d724792908c3b9bf30d15]: q9-mean1
+:results:
+33.3 
+:end:
+
+#+NAME: q9-stdd1
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(stdd1);
+#+END_SRC
+
+#+RESULTS[82a24b553ceb6759b81e9031c9fecf165b3822dd]: q9-stdd1
+:results:
+11.1 
+:end:
+
+#+NAME: q9-mean2
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(mean2);
+#+END_SRC
+
+#+RESULTS[b0967aebfd8ceb86d2ad77662580e6355ca218ce]: q9-mean2
+:results:
+28.8 
+:end:
+
+#+NAME: q9-stdd2
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(stdd2);
+#+END_SRC
+
+#+RESULTS[64d19d39b77a45ad0ef2a3042cbb4748f07fed46]: q9-stdd2
+:results:
+12.2 
+:end:
+
+#+NAME: q9-significance
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(significance);
+#+END_SRC
+
+#+RESULTS[9027f992277a7bb229759e95bc0eb19489934f1e]: q9-significance
+:results:
+0.02 
+:end:
+
+#+NAME: q9-z
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(z);
+#+END_SRC
+
+#+RESULTS[e26a90e57c6b1724c8849fb289453c1158a5a90f]: q9-z
+:results:
+2.874 
+:end:
+
+#+NAME: q9-p
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(p);
+#+END_SRC
+
+#+RESULTS[16fdc698ebf8767a2271bfe2893387f50920a007]: q9-p
+:results:
+0.002024 
+:end:
+
+#+NAME: q9-zcrit
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  print(zcrit);
+#+END_SRC
+
+#+RESULTS[83ce3af19a1b89250994d5e546dc3c25a3c474c4]: q9-zcrit
+:results:
+2.054 
+:end:
+
+
+#+NAME: q9-qtable
+#+HEADER: :exports output :results table :noweb yes 
+#+BEGIN_SRC maxima 
+  <<q9-maxima>>
+  dontneedthis: [
+     [ "", "n", "mean", "s.d." ]
+    ,["Ten years ago", n, mean1, stdd1 ]
+    ,[ "Today", n, mean2, stdd2 ]
+  ];
+  oM: transpose(funmake('matrix, dontneedthis));
+  printf(true, "~{~a~^, ~}~%", oM[1]);
+  printf(true, "~{~a~^, ~}~%", oM[2]);
+  printf(true, "~{~a~^, ~}~%", oM[3]);
+  printf(true, "~{~a~^, ~}~%", oM[4]);
+#+END_SRC
+
+#+RESULTS[83e4101b27889a82130628c73fb3cec1b6d0a6d0]: q9-qtable
+|      | Ten years ago | Today |
+| n    |           111 |   111 |
+| mean |          33.3 |  28.8 |
+| s.d. |          11.1 |  12.2 |
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q9A-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q9A-parameters
+|  100 |  33.1 |  11.3 |
+|   -0 |  28.6 |  12.7 |
+| 0.05 |    -0 |    -0 |
+
+*** Question
+To test the theory that the
+consumption of red meat has decreased over the past ten years, a
+researcher decides to select hospital nutrition records for
+call_q9-n() {{{results(100 )}}}
+subjects surveyed ten years ago and to compare their average amount
+of beef consumed per year to amounts consumed by an equal number of
+subjects interviewed this year.  Ten years ago the mean consumption
+of was
+call_q9-mean1() {{{results(33.1 )}}}
+kg per year with a standard deviation of
+call_q9-stdd1() {{{results(11.3 )}}}
+kg/year.
+This year the mean consumption was
+call_q9-mean2() {{{results(28.6 )}}}
+kg/year with a standard deviation of
+call_q9-stdd2() {{{results(12.7 )}}}
+kg/year.
+Do the data present sufficient evidence
+that per-capita beef consumption has decreased from ten years ago to
+now?
+1. State the apporpriate hypotheses.
+2. Calculate the value of the test statistic.
+3. Calculate the \(p\)-value.
+4. Determine the critical region using the significance level
+   \( \alpha = \) call_q9-significance() {{{results(0.05 )}}}
+5. What is your conclusion?
+*** TODO Hint
+*** Answer
+1. Null hypothesis \(H_0: \mu_1 = \mu_2\)
+
+   Alternative hypothesis \(H_a: \mu_1 > \mu_2 \)
+2. Test statistic \(z = \) call_q9-z() {{{results(2.647 )}}}
+3. \(p\)-value \(p=\) call_q9-p() {{{results(0.004059 )}}}
+4. Critical region \(z > \) call_q9-zcrit() {{{results(1.645 )}}}
+5. Conclusion:
+   call_q9-conclusionShort() {{{results(\( z > z_c \) so we reject the null hypothesis )}}}
+*** TODO Solution
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q9B-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q9B-parameters
+|  100 |  33.1 |  11.3 |
+|   -0 |  28.6 |  12.7 |
+| 0.05 |    -0 |    -0 |
+
+*** Question
+To test the theory that the
+consumption of red meat has decreased over the past ten years, a
+researcher decides to select hospital nutrition records for
+call_q9-n() {{{results(100 )}}}
+subjects surveyed ten years ago and to compare their average amount
+of beef consumed per year to amounts consumed by an equal number of
+subjects interviewed this year.  Ten years ago the mean consumption
+of was
+call_q9-mean1() {{{results(33.1 )}}}
+kg per year with a standard deviation of
+call_q9-stdd1() {{{results(11.3 )}}}
+kg/year.
+This year the mean consumption was
+call_q9-mean2() {{{results(28.6 )}}}
+kg/year with a standard deviation of
+call_q9-stdd2() {{{results(12.7 )}}}
+kg/year.
+Do the data present sufficient evidence
+that per-capita beef consumption has decreased from ten years ago to
+now?
+1. State the apporpriate hypotheses.
+2. Calculate the value of the test statistic.
+3. Calculate the \(p\)-value.
+4. Determine the critical region using the significance level
+   \( \alpha = \) call_q9-significance() {{{results(0.05 )}}}
+5. What is your conclusion?
+*** TODO Hint
+*** Answer
+1. Null hypothesis \(H_0: \mu_1 = \mu_2\)
+
+   Alternative hypothesis \(H_a: \mu_1 > \mu_2 \)
+2. Test statistic \(z = \) call_q9-z() {{{results(2.647 )}}}
+3. \(p\)-value \(p=\) call_q9-p() {{{results(0.004059 )}}}
+4. Critical region \(z > \) call_q9-zcrit() {{{results(1.645 )}}}
+5. Conclusion:
+   call_q9-conclusionShort() {{{results(\( z > z_c \) so we reject the null hypothesis )}}}
+*** TODO Solution
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q9C-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q9C-parameters
+|  100 |  35.3 |  11.3 |
+|   -0 |  30.8 |  12.7 |
+| 0.01 |    -0 |    -0 |
+*** Question
+To test the theory that the
+consumption of red meat has decreased over the past ten years, a
+researcher decides to select hospital nutrition records for
+call_q9-n() {{{results(100 )}}}
+subjects surveyed ten years ago and to compare their average amount
+of beef consumed per year to amounts consumed by an equal number of
+subjects interviewed this year.  Ten years ago the mean consumption
+of was
+call_q9-mean1() {{{results(35.3 )}}}
+kg per year with a standard deviation of
+call_q9-stdd1() {{{results(11.3 )}}}
+kg/year.
+This year the mean consumption was
+call_q9-mean2() {{{results(30.8 )}}}
+kg/year with a standard deviation of
+call_q9-stdd2() {{{results(12.7 )}}}
+kg/year.
+Do the data present sufficient evidence
+that per-capita beef consumption has decreased from ten years ago to
+now?
+1. State the apporpriate hypotheses.
+2. Calculate the value of the test statistic.
+3. Calculate the \(p\)-value.
+4. Determine the critical region using the significance level
+   \( \alpha = \) call_q9-significance() {{{results(0.01 )}}}
+5. What is your conclusion?
+*** TODO Hint
+*** Answer
+1. Null hypothesis \(H_0: \mu_1 = \mu_2\)
+
+   Alternative hypothesis \(H_a: \mu_1 > \mu_2 \)
+2. Test statistic \(z = \) call_q9-z() {{{results(2.647 )}}}
+3. \(p\)-value \(p=\) call_q9-p() {{{results(0.004059 )}}}
+4. Critical region \(z > \) call_q9-zcrit() {{{results(2.326 )}}}
+5. Conclusion:
+   call_q9-conclusionShort() {{{results(\( z > z_c \) so we reject the null hypothesis )}}}
+*** TODO Solution
+
+
+* Question 10
+** Maxima :noexport:
+#+NAME: q10-maxima
+#+HEADER: :exports results :results output :noweb yes
+#+BEGIN_SRC maxima
+  if constantp(parameters)
+  then block(
+    n: parameters[1][1]
+    ,k: parameters[1][2]
+    ,sst: parameters[1][3]
+    ,ss: parameters[1][4]
+    ,significance: parameters[1][5]
+    )
+  else block(
+    /* TODO: randomly generate the parameters (based on a seed) */
+    /* TODO: randomly generate the data (based on a seed) */
+    n: 18.0
+    ,k: 3.0
+    ,sst: 76
+    ,ss: 179
+    ,significance: 0.025
+    );
+  load("distrib");
+  /* TODO: calculate sst and ss from raw data */
+  fpprintprec: 4$
+  linel: 2000; /* do not break long lines */
+  sse: float(ss - sst);
+  dft: k-1;
+  dfe: n-k;
+  df: n-1;
+  mst: float(sst/dft);
+  mse: float(sse/dfe);
+  F: float(mst/mse);
+  Fcrit: float( quantile_f(1-significance,dft,dfe) );
+  conclusionShort: if F > Fcrit
+  then "\\( F > F_c \\) so we reject the null hypothesis and conclude that there is evidence that one of the treatments differs from the others"
+  else "\\( F < F_c \\) so we do not reject the null hypothesis and conclude that there is no evidence that any of the treatments differs from the others";
+#+END_SRC
+
+#+RESULTS[409dab2e574d13c136e5fe965d56c000f0f21e9b]: q10-maxima
+
+#+NAME: q10-conclusionShort
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q10-maxima>>
+  print(conclusionShort);
+#+END_SRC
+
+#+RESULTS[b349f7a9d9498d206d9cf9753ae7f1e2afcc90e6]: q10-conclusionShort
+:results:
+\( F > F_c \) so we reject the null hypothesis and conclude that there is evidence that one of the treatments differs from the others 
+:end:
+
+#+NAME: q10-n
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q10-maxima>>
+  print(n);
+#+END_SRC
+
+#+RESULTS[3fb523b4ed20b9b18677da9e28a1ecf6b1cac3dc]: q10-n
+:results:
+18.0 
+:end:
+
+#+NAME: q10-k
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q10-maxima>>
+  print(k);
+#+END_SRC
+
+#+RESULTS[0324992e9995146cc2883f932abcf8e7bcafa5e9]: q10-k
+:results:
+3.0 
+:end:
+
+#+NAME: q10-sst
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q10-maxima>>
+  print(sst);
+#+END_SRC
+
+#+RESULTS[0287bab62321301fa880144256089484cba7bd16]: q10-sst
+:results:
+76 
+:end:
+
+#+NAME: q10-ss
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q10-maxima>>
+  print(ss);
+#+END_SRC
+
+#+RESULTS[07734cd681147f5c0e6545c67305aff50bbe4857]: q10-ss
+:results:
+179 
+:end:
+
+#+NAME: q10-significance
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q10-maxima>>
+  print(significance);
+#+END_SRC
+
+#+RESULTS[2fbf2ec91f612dba2a62881d626e3e4261c2b9ba]: q10-significance
+:results:
+0.025 
+:end:
+
+#+NAME: q10-F
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q10-maxima>>
+  print(F);
+#+END_SRC
+
+#+RESULTS[2bc2ba37d217f78dbee6275f32a4f070ebb25d68]: q10-F
+:results:
+5.534 
+:end:
+
+#+NAME: q10-Fcrit
+#+HEADER: :exports output :results drawer :noweb yes
+#+BEGIN_SRC maxima 
+  <<q10-maxima>>
+  print(Fcrit);
+#+END_SRC
+
+#+RESULTS[9748a5077d678b36676552e4735047e76043663c]: q10-Fcrit
+:results:
+4.765 
+:end:
+
+#+NAME: q10-partial-ANOVA
+#+HEADER: :exports output :results table :noweb yes
+#+BEGIN_SRC maxima
+  <<q10-maxima>>
+  printf(true, "Source, Sum of Squares, \\(df\\), Mean Squares, \\(F\\)~%");
+  printf(true, "~{~a~^, ~}~%", [ "Treatments", sst, "", "", ""]);
+  printf(true, "~{~a~^, ~}~%", [ "Errors", "", "", "", ""]);
+  printf(true, "~{~a~^, ~}~%", [ "Total", ss, "", "", ""]);
+#+END_SRC
+
+#+RESULTS[48f1794d2447a5bd7b72a0a0c91bef1ca8fc09d6]: q10-partial-ANOVA
+| Source     | Sum of Squares | \(df\) | Mean Squares | \(F\) |
+| Treatments |             76 |        |              |       |
+| Errors     |                |        |              |       |
+| Total      |            179 |        |              |       |
+
+#+NAME: q10-ANOVA
+#+HEADER: :exports output :results table :noweb yes
+#+BEGIN_SRC maxima
+  <<q10-maxima>>
+  printf(true, "Source, Sum of Squares, \\(df\\), Mean Squares, \\(F\\)~%");
+  printf(true, "~{~a~^, ~}~%", [ "Treatments", sst, dft, mst, F]);
+  printf(true, "~{~a~^, ~}~%", [ "Errors", sse, dfe, mse, ""]);
+  printf(true, "~{~a~^, ~}~%", [ "Total", ss, df, "", ""]);
+#+END_SRC
+
+#+RESULTS[33f25aeb67bc1c3619bd3433e893cbe8376aca30]: q10-ANOVA
+| Source     | Sum of Squares | \(df\) | Mean Squares | \(F\) |
+| Treatments |             76 |    2.0 |         38.0 | 5.534 |
+| Errors     |          103.0 |   15.0 |        6.867 |       |
+| Total      |            179 |   17.0 |              |       |
+
+** Version A
+:PROPERTIES:
+:header-args:maxima: :var parameters=q10A-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q10A-parameters
+| 18 | 3 | 76.4444 | 179.6111 | 0.05 |
+*** Question
+A consumer would like to know
+whether there is a difference in the performance of three different
+laundry detergents.
+call_q10-n() {{{results(18 )}}}
+pieces of white cloth were soiled with
+grape juice then washed in one of the
+call_q10-k() {{{results(3 )}}}
+detergents A, B, or C.
+The resulting whiteness readings are listed below, where the larger
+number indicates whiter fabric.
+| Detergent A | Detergent B | Detergent C |
+|          77 |          73 |          76 |
+|          71 |          68 |          78 |
+|          74 |          75 |          75 |
+|          78 |          74 |          73 |
+|          76 |          70 |          78 |
+|          79 |          71 |          79 |
+Can the consumer conclude that the average performance of the
+detergents differ at all at the
+call_q10-significance() {{{results(0.05 )}}}
+level of significance?
+(Assume the hypothetical population of whiteness readings for each
+detergent is normal with a common standard deviation.)
+
+Use the values from the following \textit{partially completed} ANOVA
+table in your analysis.
+#+CALL: q10-partial-ANOVA(parameters=q10A-parameters)
+
+#+RESULTS[00a572e1d252051fbcc155e2774efe79ee438a8d]:
+| Source     | Sum of Squares | \(df\) | Mean Squares | \(F\) |
+| Treatments |          76.44 |        |              |       |
+| Errors     |                |        |              |       |
+| Total      |          179.6 |        |              |       |
+
+*** TODO Hint
+*** Answer
+The completed ANOVA table is
+#+CALL: q10-ANOVA()
+
+#+RESULTS[60dd9bd4858ddbebbbcfb5befb776153dd22478c]:
+| Source     | Sum of Squares | \(df\) | Mean Squares | \(F\) |
+| Treatments |          76.44 |      2 |        38.22 | 5.557 |
+| Errors     |          103.2 |     15 |        6.878 |       |
+| Total      |          179.6 |     17 |              |       |
+
+The critical value of \(F\) is \(F_c = \)
+call_q10-Fcrit() {{{results(3.682 )}}}.
+We have
+call_q10-conclusionShort() {{{results(\( F > F_c \) so we reject the null hypothesis and conclude that there is evidence that one of the treatments differs from the others )}}}.
+*** TODO Solution
+** Version B
+:PROPERTIES:
+:header-args:maxima: :var parameters=q10B-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q10B-parameters
+| 18 | 3 | 67.4444 | 161.1111 | 0.05 |
+*** Question
+A consumer would like to know
+whether there is a difference in the performance of three different
+laundry detergents.
+call_q10-n() {{{results(18 )}}}
+pieces of white cloth were soiled with
+grape juice then washed in one of the
+call_q10-k() {{{results(3 )}}}
+detergents A, B, or C.
+The resulting whiteness readings are listed below, where the larger
+number indicates whiter fabric.
+| Detergent A | Detergent B | Detergent C |
+|          75 |          74 |          76 |
+|          71 |          68 |          78 |
+|          69 |          75 |          75 |
+|          73 |          74 |          73 |
+|          76 |          71 |          78 |
+|          72 |          71 |          79 |
+Can the consumer conclude that the average performance of the
+detergents differ at all at the
+call_q10-significance() {{{results(0.05 )}}}
+level of significance?
+(Assume the hypothetical population of whiteness readings for each
+detergent is normal with a common standard deviation.)
+
+Use the values from the following \textit{partially completed} ANOVA
+table in your analysis.
+#+CALL: q10-partial-ANOVA()
+
+#+RESULTS[44057e0113e3823f9eab0e99cd67a8c208f75fbb]:
+| Source     | Sum of Squares | \(df\) | Mean Squares | \(F\) |
+| Treatments |          67.44 |        |              |       |
+| Errors     |                |        |              |       |
+| Total      |          161.1 |        |              |       |
+
+*** TODO Hint
+*** Answer
+The completed ANOVA table is
+#+CALL: q10-ANOVA()
+
+#+RESULTS[59ffee43064b42372031673a1b574d54999244ae]:
+| Source     | Sum of Squares | \(df\) | Mean Squares | \(F\) |
+| Treatments |          67.44 |      2 |        33.72 |   5.4 |
+| Errors     |          93.67 |     15 |        6.244 |       |
+| Total      |          161.1 |     17 |              |       |
+
+The critical value of \(F\) is \(F_c = \)
+call_q10-Fcrit() {{{results(3.682 )}}}.
+We have
+call_q10-conclusionShort() {{{results(\( F > F_c \) so we reject the null hypothesis and conclude that there is evidence that one of the treatments differs from the others )}}}.
+*** TODO Solution
+
+** Version C
+:PROPERTIES:
+:header-args:maxima: :var parameters=q10C-parameters
+:END:
+*** Parameters                                                     :noexport:
+#+NAME: q10C-parameters
+| 18 | 3 | 57.3333 | 184.5000 | 0.05 |
+
+*** Question
+A consumer would like to know
+whether there is a difference in the performance of three different
+laundry detergents.
+call_q10-n() {{{results(18 )}}}
+pieces of white cloth were soiled with
+grape juice then washed in one of the
+call_q10-k() {{{results(3 )}}}
+detergents A, B, or C.
+The resulting whiteness readings are listed below, where the larger
+number indicates whiter fabric.
+| Detergent A | Detergent B | Detergent C |
+|          77 |          74 |          76 |
+|          71 |          68 |          78 |
+|          69 |          75 |          75 |
+|          78 |          74 |          73 |
+|          76 |          71 |          78 |
+|          72 |          71 |          79 |
+Can the consumer conclude that the average performance of the
+detergents differ at all at the
+call_q10-significance() {{{results(0.05 )}}}
+level of significance?
+(Assume the hypothetical population of whiteness readings for each
+detergent is normal with a common standard deviation.)
+
+Use the values from the following \textit{partially completed} ANOVA
+table in your analysis.
+#+CALL: q10-partial-ANOVA()
+
+#+RESULTS[fc2ca0ef0a3e4d90c7f2f90ebb04f13db1a44f34]:
+| Source     | Sum of Squares | \(df\) | Mean Squares | \(F\) |
+| Treatments |          57.33 |        |              |       |
+| Errors     |                |        |              |       |
+| Total      |          184.5 |        |              |       |
+
+*** TODO Hint
+*** Answer
+The completed ANOVA table is
+#+CALL: q10-ANOVA()
+
+#+RESULTS[5f486056d01424f4899e4977f4080daabffe4365]:
+| Source     | Sum of Squares | \(df\) | Mean Squares | \(F\) |
+| Treatments |          57.33 |      2 |        28.67 | 3.381 |
+| Errors     |          127.2 |     15 |        8.478 |       |
+| Total      |          184.5 |     17 |              |       |
+
+The critical value of \(F\) is \(F_c = \)
+call_q10-Fcrit() {{{results(3.682 )}}}.
+We have
+call_q10-conclusionShort() {{{results(\( F < F_c \) so we do not reject the null hypothesis and conclude that there is no evidence that any of the treatments differs from the others )}}}.
+*** TODO Solution
+
